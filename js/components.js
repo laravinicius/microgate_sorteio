@@ -45,10 +45,31 @@ async function loadComponents() {
         menuOverlay.addEventListener('click', toggleMenu);
     }
 
-    // Mostra "Jogar novamente" e "Meu número da sorte" apenas para quem está logado
+    // Mostra "Jogar novamente", "Meu Perfil" e "Sair" apenas para quem está logado
     const logado = !!SorteioAPI.getParticipante();
     document.querySelectorAll('[data-nav-logado]').forEach((el) => {
         el.classList.toggle('hidden', !logado);
+    });
+
+    // Link "Administração" apenas para administradores
+    const isAdmin = logado && SorteioAPI.getAdmin();
+    document.querySelectorAll('[data-nav-admin]').forEach((el) => {
+        el.classList.toggle('hidden', !isAdmin);
+    });
+
+    // Logo: logado -> perfil; deslogado -> cadastro/login (index)
+    const logoLink = document.getElementById('logo-link');
+    const logoLinkMobile = document.getElementById('logo-link-mobile');
+    const logoDestino = logado ? './perfil.html' : './index.html';
+    if (logoLink) logoLink.href = logoDestino;
+    if (logoLinkMobile) logoLinkMobile.href = logoDestino;
+
+    // Logoff a partir do menu de navegação
+    document.querySelectorAll('[data-nav-sair]').forEach((el) => {
+        el.addEventListener('click', () => {
+            SorteioAPI.logout();
+            window.location.href = './index.html';
+        });
     });
 
     // Reinicializa ícones após carregar o HTML dinâmico

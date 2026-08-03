@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/output.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+</head>
+
+<body class="bg-brand-dark text-brand-light dark:text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-20" id="header-placeholder"></div>
+
+            <main class="pt-32 pb-20 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold mb-1">Administração</h1>
+                            <p id="admin-sub" class="text-sm text-gray-400">Carregando usuários...</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="admin-btn-exportar"
+                                class="hidden font-semibold text-sm rounded-lg py-2 px-4 bg-green-600 text-white hover:bg-green-700 transition">
+                                Exportar CSV
+                            </button>
+                            <a href="./perfil.html"
+                                class="font-semibold text-sm rounded-lg py-2 px-4 border border-white/10 text-white hover:bg-white/5 transition">
+                                Meu Perfil
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-dark border border-white/10 rounded-2xl p-6">
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <div class="relative flex-1 min-w-[240px]">
+                                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                <input id="admin-busca" type="text" placeholder="Buscar por nome, e-mail, celular ou empresa..."
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 pl-10 pr-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <span id="admin-contador" class="text-sm text-gray-400"></span>
+                        </div>
+
+                        <div id="admin-carregando" class="text-sm text-gray-400 py-8 text-center">Carregando...</div>
+                        <div id="admin-erro" class="hidden text-sm text-red-400 py-8 text-center"></div>
+
+                        <div id="admin-tabela-wrap" class="hidden overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-gray-400 border-b border-white/10">
+                                        <th class="py-2 pr-4 whitespace-nowrap">Nome</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">E-mail</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Celular</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Empresa</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Número</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Jogo</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Pontuação</th>
+                                        <th class="py-2 pr-4 whitespace-nowrap">Cadastro</th>
+                                        <th class="py-2 whitespace-nowrap"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = SorteioAPI.getParticipante();
+            if (!token) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            const sub = document.getElementById('admin-sub');
+            const carregando = document.getElementById('admin-carregando');
+            const erroEl = document.getElementById('admin-erro');
+            const tabelaWrap = document.getElementById('admin-tabela-wrap');
+            const tbody = document.getElementById('admin-tbody');
+            const busca = document.getElementById('admin-busca');
+            const contador = document.getElementById('admin-contador');
+            const btnExportar = document.getElementById('admin-btn-exportar');
+
+            let usuarios = [];
+
+            function nomeJogo(jogo) {
+                if (jogo === 'firewall_defense') return 'Firewall Defense';
+                if (jogo === 'patch_panel_rush') return 'Patch Panel Rush';
+                return jogo || '—';
+            }
+
+            function formatarCelular(cel) {
+                if (!cel) return '—';
+                if (cel.length === 11) {
+                    return `(${cel.slice(0, 2)}) ${cel.slice(2, 7)}-${cel.slice(7)}`;
+                }
+                if (cel.length === 10) {
+                    return `(${cel.slice(0, 2)}) ${cel.slice(2, 6)}-${cel.slice(6)}`;
+                }
+                return cel;
+            }
+
+            function formatarData(iso) {
+                if (!iso) return '—';
+                return new Date(iso).toLocaleString('pt-BR');
+            }
+
+            function renderizar() {
+                const termo = busca.value.trim().toLowerCase();
+                const filtrados = termo
+                    ? usuarios.filter((u) =>
+                        [u.nome_completo, u.email, u.celular, u.empresa]
+                            .filter(Boolean)
+                            .some((v) => v.toLowerCase().includes(termo)))
+                    : usuarios;
+
+                contador.textContent = `${filtrados.length} de ${usuarios.length} usuários`;
+                tbody.innerHTML = '';
+
+                filtrados.forEach((u) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-white/5 hover:bg-white/5 transition';
+
+                    const adminBadge = u.is_admin
+                        ? '<span class="text-xs text-amber-400 border border-amber-400/40 rounded px-1.5 py-0.5 ml-2">Admin</span>'
+                        : '';
+
+                    tr.innerHTML = `
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(u.nome_completo)}${adminBadge}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(u.email)}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(formatarCelular(u.celular))}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(u.empresa || '—')}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap ${u.numero_sorte ? 'text-emerald-400 font-semibold' : 'text-gray-500'}">${u.numero_sorte || '—'}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(nomeJogo(u.jogo))}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${u.pontuacao ?? '—'}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(formatarData(u.criado_em))}</td>
+                        <td class="py-3 whitespace-nowrap text-right">
+                            <button type="button" class="admin-detalhes text-gray-400 hover:text-white transition inline-flex items-center gap-1">
+                                <i data-lucide="chevron-down" class="w-4 h-4 chevron"></i> Detalhes
+                            </button>
+                        </td>
+                    `;
+
+                    const detalhe = document.createElement('tr');
+                    detalhe.className = 'hidden';
+                    detalhe.innerHTML = `
+                        <td colspan="9" class="py-3 pl-6 pr-4 text-gray-400">
+                            <div class="grid sm:grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-gray-500">IP de origem:</span> ${escapeHtml(u.ip_origem || '—')}</div>
+                                <div><span class="text-gray-500">Cadastrado em:</span> ${escapeHtml(formatarData(u.criado_em))}</div>
+                                <div class="sm:col-span-2">
+                                    <span class="text-gray-500">User agent:</span>
+                                    <span class="break-words">${escapeHtml(u.user_agent || '—')}</span>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+
+                    tr.querySelector('.admin-detalhes').addEventListener('click', () => {
+                        detalhe.classList.toggle('hidden');
+                        tr.querySelector('.chevron').classList.toggle('rotate-180');
+                    });
+
+                    tbody.appendChild(tr);
+                    tbody.appendChild(detalhe);
+                });
+
+                if (window.lucide) window.lucide.createIcons();
+            }
+
+            function escapeHtml(texto) {
+                return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+                }[c]));
+            }
+
+            function exportarCsv() {
+                const cabecalho = ['nome', 'email', 'celular', 'empresa', 'numero_sorte', 'jogo', 'pontuacao', 'criado_em', 'ip_origem', 'user_agent'];
+                const linhas = usuarios.map((u) =>
+                    cabecalho.map((campo) => {
+                        const valor = u[campo] ?? '';
+                        const texto = String(valor);
+                        return /[";\n,]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+                    }).join(';')
+                );
+                const csv = [cabecalho.join(';'), ...linhas].join('\n');
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `usuarios-sorteio-${new Date().toISOString().slice(0, 10)}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+
+            busca.addEventListener('input', renderizar);
+            btnExportar.addEventListener('click', exportarCsv);
+
+            SorteioAPI.listarUsuarios(token)
+                .then((dados) => {
+                    usuarios = dados.usuarios || [];
+                    SorteioAPI.salvarAdmin(true);
+                    sub.textContent = `${dados.total} usuário(s) cadastrado(s).`;
+                    carregando.classList.add('hidden');
+                    tabelaWrap.classList.remove('hidden');
+                    btnExportar.classList.remove('hidden');
+                    renderizar();
+                })
+                .catch((err) => {
+                    carregando.classList.add('hidden');
+                    erroEl.textContent = err.message;
+                    erroEl.classList.remove('hidden');
+                    if (err.status === 403 || err.status === 404) {
+                        setTimeout(() => { window.location.href = './perfil.html'; }, 2000);
+                    }
+                });
+        });
+    </script>
+</body>
+
+</html>

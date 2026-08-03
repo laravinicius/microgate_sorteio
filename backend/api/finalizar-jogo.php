@@ -55,6 +55,24 @@ try {
         erro(409, 'Esta sessão de jogo já foi finalizada.');
     }
 
+    // Administrador pode jogar, mas NÃO recebe número da sorte.
+    $stmt = $pdo->prepare('SELECT is_admin FROM participantes WHERE id = :pid');
+    $stmt->execute(['pid' => $sessao['participante_id']]);
+    $admin = $stmt->fetch();
+    if ($admin && $admin['is_admin']) {
+        $stmt = $pdo->prepare(
+            "UPDATE sessoes_jogo SET status = 'concluido', finalizado_em = now() WHERE id = :id"
+        );
+        $stmt->execute(['id' => $sessao['id']]);
+        $pdo->commit();
+        sucesso([
+            'admin'        => true,
+            'numero_sorte' => null,
+            'jogo'         => $sessao['jogo'],
+            'novo_numero'  => false,
+        ]);
+    }
+
     // Replay: participante já tem número da sorte -> não gera novo, só conclui a sessão.
     $stmt = $pdo->prepare('SELECT numero FROM numeros_sorte WHERE participante_id = :pid');
     $stmt->execute(['pid' => $sessao['participante_id']]);

@@ -34,6 +34,12 @@ const SorteioAPI = (() => {
         consultarNumero(token) {
             return post('meu-numero.php', { participante_token: token });
         },
+        atualizarParticipante(token, payload) {
+            return post('atualizar-cadastro.php', {
+                participante_token: token,
+                ...payload,
+            });
+        },
         iniciarJogo(participanteToken, jogo) {
             return post('iniciar-jogo.php', { participante_token: participanteToken, jogo });
         },
@@ -44,12 +50,21 @@ const SorteioAPI = (() => {
                 segundos_jogados: segundosJogados,
             });
         },
+        listarUsuarios(token) {
+            return post('admin-usuarios.php', { participante_token: token });
+        },
 
         salvarParticipante(token) {
             sessionStorage.setItem('participante_token', token);
         },
         getParticipante() {
             return sessionStorage.getItem('participante_token');
+        },
+        salvarAdmin(isAdmin) {
+            sessionStorage.setItem('participante_admin', isAdmin ? '1' : '0');
+        },
+        getAdmin() {
+            return sessionStorage.getItem('participante_admin') === '1';
         },
         salvarSessaoJogo(token, jogo) {
             sessionStorage.setItem('sessao_token', token);
@@ -62,6 +77,12 @@ const SorteioAPI = (() => {
             };
         },
         limparSessaoJogo() {
+            sessionStorage.removeItem('sessao_token');
+            sessionStorage.removeItem('sessao_jogo');
+        },
+        logout() {
+            sessionStorage.removeItem('participante_token');
+            sessionStorage.removeItem('participante_admin');
             sessionStorage.removeItem('sessao_token');
             sessionStorage.removeItem('sessao_jogo');
         },

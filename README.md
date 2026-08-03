@@ -10,7 +10,8 @@ sorteio/
 ├── jogos.html          # Hub de seleção de minigames
 ├── pprush.html         # Minigame: PP Rush
 ├── fdefense.html       # Minigame: F Defense
-├── meu-numero.html     # Consulta do número da sorte
+├── perfil.html         # Perfil do participante (dados + número da sorte + sair)
+├── admin.html          # Painel do administrador (lista de usuários + exportar CSV)
 ├── components/         # Header/footer compartilhados
 ├── css/                # Estilos (inclui output.css gerado via Tailwind)
 ├── js/
@@ -21,7 +22,7 @@ sorteio/
 └── backend/            # API em PHP + PostgreSQL (ver backend/README.md)
     ├── config/         # database.php (ignorado pelo git) + database.example.php
     ├── lib/            # bootstrap.php (PDO + helpers JSON)
-    ├── api/            # cadastro, login, meu-numero, iniciar/finalizar-jogo
+    ├── api/            # cadastro, login, atualizar-cadastro, meu-numero, iniciar/finalizar-jogo
     └── sql/schema.sql  # Script de criação do banco
 ```
 

@@ -17,11 +17,14 @@ backend/
 ├── api/
 │   ├── cadastro.php        POST -> cadastra participante (devolve token)
 │   ├── login.php           POST -> autentica participante existente (e-mail + celular)
+│   ├── atualizar-cadastro.php POST -> atualiza dados do participante autenticado
 │   ├── meu-numero.php      POST -> consulta dados e número da sorte do participante
 │   ├── iniciar-jogo.php    POST -> abre sessão do minigame escolhido (permite replay)
 │   └── finalizar-jogo.php  POST -> encerra sessão e gera o número da sorte (replay não gera novo)
+│   └── admin-usuarios.php POST -> lista todos os participantes (somente administrador)
 └── sql/
-    └── schema.sql      <- script de criação do banco/tabelas
+    ├── schema.sql      <- script de criação do banco/tabelas
+    └── migracao_admin.sql <- adiciona is_admin e cria o cadastro do administrador
 ```
 
 ## Passo a passo de instalação
@@ -43,9 +46,11 @@ backend/
    ao lado do `index.html` já publicado. Os endpoints ficam acessíveis em:
    - `https://seu-dominio/backend/api/cadastro.php`
    - `https://seu-dominio/backend/api/login.php`
+   - `https://seu-dominio/backend/api/atualizar-cadastro.php`
    - `https://seu-dominio/backend/api/meu-numero.php`
    - `https://seu-dominio/backend/api/iniciar-jogo.php`
    - `https://seu-dominio/backend/api/finalizar-jogo.php`
+   - `https://seu-dominio/backend/api/admin-usuarios.php`
 
 4. **Teste rápido**
    ```bash
@@ -65,3 +70,10 @@ backend/
 - Número da sorte aleatório de 6 dígitos, único no banco (retry automático em caso de colisão).
 - Validação de tempo mínimo jogado (5s) para dificultar chamada direta à API sem jogar.
 - Todas as respostas em JSON, incluindo erros (`sucesso: false` + `erro: "mensagem"`).
+
+## Administrador
+- Identificado pela coluna `is_admin` na tabela `participantes`.
+- Pode jogar os minigames, mas **não** recebe número da sorte.
+- Pode listar todos os usuários em `admin.html` (endpoint `admin-usuarios.php` protegido por token de admin).
+- Para ativar, rode `sql/migracao_admin.sql` no banco (cria o cadastro `Administrador` com
+  e-mail `ti@microgateinformatica.com.br` e celular `41991942228`).

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/output.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+</head>
+
+<body class="bg-brand-dark text-brand-light dark:text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-20" id="header-placeholder"></div>
+
+            <main class="pt-32 pb-20 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="max-w-md mx-auto space-y-6">
+                        <div class="bg-brand-dark border border-white/10 rounded-2xl p-8">
+                            <div class="flex items-center justify-between mb-6">
+                                <h1 class="text-2xl font-bold">Meu Perfil</h1>
+                                <button id="pf-btn-sair"
+                                    class="text-sm text-red-400 hover:text-red-300 transition flex items-center gap-2">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+                                </button>
+                            </div>
+                            <p id="pf-sub" class="text-sm text-gray-400 mb-6">Carregando...</p>
+
+                            <form id="pf-form" class="space-y-6 hidden">
+                                <div>
+                                    <label for="nome" class="block text-sm mb-1">Nome completo *</label>
+                                    <input id="nome" name="nome" type="text" required minlength="3"
+                                        class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm mb-1">E-mail *</label>
+                                    <input id="email" name="email" type="email" required
+                                        class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                                </div>
+                                <div>
+                                    <label for="celular" class="block text-sm mb-1">Celular (com DDD) *</label>
+                                    <input id="celular" name="celular" type="tel" required placeholder="(41) 99999-8888"
+                                        class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                                </div>
+                                <div>
+                                    <label for="empresa" class="block text-sm mb-1">Empresa (opcional)</label>
+                                    <input id="empresa" name="empresa" type="text"
+                                        class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                                </div>
+
+                                <div id="pf-form-mensagem" class="text-sm hidden"></div>
+
+                                <button type="submit" id="pf-btn-salvar"
+                                    class="w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                    Salvar alterações
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="bg-brand-dark border border-white/10 rounded-2xl p-8 text-center">
+                            <h2 class="text-lg font-bold mb-2">Meu número da sorte</h2>
+
+                            <div id="pf-tem" class="hidden">
+                                <div id="pf-numero" class="text-5xl font-bold tracking-widest text-emerald-400 mb-4">----
+                                </div>
+                                <div id="pf-detalhes" class="text-sm text-gray-400 whitespace-pre-line mb-6"></div>
+                                <a href="./jogos.html"
+                                    class="block w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition mb-3">
+                                    Jogar novamente
+                                </a>
+                                <a href="https://microgateinformatica.com.br" target="_blank" rel="noopener"
+                                    class="block w-full font-semibold text-sm rounded-lg py-3 border border-white/10 text-white hover:bg-white/5 transition">
+                                    Acessar Website
+                                </a>
+                            </div>
+
+                            <div id="pf-sem" class="hidden">
+                                <p class="text-sm text-gray-400 mb-6">Você ainda não participou do sorteio. Jogue um
+                                    minigame para gerar seu número da sorte.</p>
+                                <a href="./jogos.html"
+                                    class="block w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                    Ir para os jogos
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="pf-erro" class="hidden text-sm text-red-400 text-center"></div>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = SorteioAPI.getParticipante();
+            if (!token) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            const sub = document.getElementById('pf-sub');
+            const form = document.getElementById('pf-form');
+            const tem = document.getElementById('pf-tem');
+            const sem = document.getElementById('pf-sem');
+            const erroEl = document.getElementById('pf-erro');
+            const msg = document.getElementById('pf-form-mensagem');
+            const btnSalvar = document.getElementById('pf-btn-salvar');
+            const btnSair = document.getElementById('pf-btn-sair');
+
+            function mostrarMensagem(texto, tipo) {
+                msg.textContent = texto;
+                msg.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
+                msg.classList.add(tipo === 'erro' ? 'text-red-400' : 'text-emerald-400');
+            }
+
+            btnSair.addEventListener('click', () => {
+                SorteioAPI.logout();
+                window.location.href = './index.html';
+            });
+
+            SorteioAPI.consultarNumero(token)
+                .then((dados) => {
+                    sub.classList.add('hidden');
+                    document.getElementById('nome').value = dados.nome || '';
+                    document.getElementById('email').value = dados.email || '';
+                    document.getElementById('celular').value = dados.celular || '';
+                    document.getElementById('empresa').value = dados.empresa || '';
+                    form.classList.remove('hidden');
+
+                    SorteioAPI.salvarAdmin(dados.is_admin === true);
+                    if (dados.is_admin === true) {
+                        sem.textContent = 'Você é o administrador do sistema. Você não recebe número da sorte, mas pode jogar os minigames quando quiser.';
+                        sem.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (dados.tem_numero) {
+                        document.getElementById('pf-numero').textContent = dados.numero_sorte;
+
+                        const linhas = [];
+                        const nomeJogo = dados.jogo === 'firewall_defense'
+                            ? 'Firewall Defense'
+                            : (dados.jogo === 'patch_panel_rush' ? 'Patch Panel Rush' : dados.jogo);
+                        linhas.push(`Jogo: ${nomeJogo} · Pontuação: ${dados.pontuacao ?? 0}`);
+                        if (dados.gerado_em) {
+                            linhas.push(`Gerado em: ${new Date(dados.gerado_em).toLocaleString('pt-BR')}`);
+                        }
+                        document.getElementById('pf-detalhes').textContent = linhas.join('\n');
+
+                        tem.classList.remove('hidden');
+                    } else {
+                        sem.classList.remove('hidden');
+                    }
+                })
+                .catch((err) => {
+                    sub.classList.add('hidden');
+                    erroEl.textContent = err.message;
+                    erroEl.classList.remove('hidden');
+                });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                btnSalvar.disabled = true;
+                btnSalvar.textContent = 'Salvando...';
+
+                try {
+                    await SorteioAPI.atualizarParticipante(token, {
+                        nome: document.getElementById('nome').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        celular: document.getElementById('celular').value.trim(),
+                        empresa: document.getElementById('empresa').value.trim(),
+                    });
+                    mostrarMensagem('Dados atualizados com sucesso!', 'sucesso');
+                } catch (err) {
+                    mostrarMensagem(err.message, 'erro');
+                } finally {
+                    btnSalvar.disabled = false;
+                    btnSalvar.textContent = 'Salvar alterações';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

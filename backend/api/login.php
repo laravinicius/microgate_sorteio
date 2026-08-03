@@ -27,7 +27,7 @@ if (mb_strlen($celularNormalizado) < 10) {
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare(
-    'SELECT p.token, p.nome_completo, ns.numero AS numero_sorte
+    'SELECT p.token, p.nome_completo, p.is_admin, ns.numero AS numero_sorte
      FROM participantes p
      LEFT JOIN numeros_sorte ns ON ns.participante_id = p.id
      WHERE p.email = :email AND p.celular = :celular
@@ -44,6 +44,7 @@ sucesso([
     'participante_token' => $participante['token'],
     'nome'               => $participante['nome_completo'],
     'ja_cadastrado'      => true,
+    'is_admin'           => (bool)$participante['is_admin'],
     'tem_numero'         => $participante['numero_sorte'] !== null,
     'numero_sorte'       => $participante['numero_sorte'],
 ]);

@@ -20,7 +20,7 @@ if ($participanteToken === '') {
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare(
-    'SELECT p.nome_completo, p.email, p.celular, p.empresa,
+    'SELECT p.nome_completo, p.email, p.celular, p.empresa, p.is_admin,
             ns.numero AS numero_sorte, ns.jogo, ns.pontuacao, ns.gerado_em
      FROM participantes p
      LEFT JOIN numeros_sorte ns ON ns.participante_id = p.id
@@ -39,6 +39,7 @@ sucesso([
     'email'        => $participante['email'],
     'celular'      => $participante['celular'],
     'empresa'      => $participante['empresa'],
+    'is_admin'     => (bool)$participante['is_admin'],
     'tem_numero'   => $participante['numero_sorte'] !== null,
     'numero_sorte' => $participante['numero_sorte'],
     'jogo'         => $participante['jogo'],

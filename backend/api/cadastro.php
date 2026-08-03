@@ -33,7 +33,7 @@ $pdo = get_pdo();
 
 // Verifica se já existe cadastro com este e-mail ou celular
 $stmt = $pdo->prepare(
-    'SELECT p.token, ns.numero AS numero_sorte
+    'SELECT p.token, p.is_admin, ns.numero AS numero_sorte
      FROM participantes p
      LEFT JOIN numeros_sorte ns ON ns.participante_id = p.id
      WHERE p.email = :email OR p.celular = :celular
@@ -48,6 +48,7 @@ if ($existente) {
     sucesso([
         'ja_cadastrado'      => true,
         'participante_token' => $existente['token'],
+        'is_admin'           => (bool)$existente['is_admin'],
         'tem_numero'         => $existente['numero_sorte'] !== null,
         'numero_sorte'       => $existente['numero_sorte'],
     ]);

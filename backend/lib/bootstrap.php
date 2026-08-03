@@ -87,3 +87,35 @@ function normalizar_celular(string $celular): string
 {
     return preg_replace('/\D/', '', $celular) ?? '';
 }
+
+// Busca o participante (id, is_admin) pelo token de sessão. Retorna null se não existir.
+function get_participante_por_token(PDO $pdo, string $token): ?array
+{
+    $stmt = $pdo->prepare(
+        'SELECT p.id, p.is_admin
+         FROM participantes p
+         WHERE p.token = :token
+         LIMIT 1'
+    );
+    $stmt->execute(['token' => $token]);
+    $linha = $stmt->fetch();
+    return $linha !== false ? $linha : null;
+}
+
+// Confirma que o token pertence a um administrador.
+function exigir_admin(): array
+{
+    $pdo = get_pdo();
+    $token = trim((string)(json_input()['participante_token'] ?? ''));
+    if ($token === '') {
+        erro(422, 'Cadastro não encontrado. Refaça o cadastro.');
+    }
+    $participante = get_participante_por_token($pdo, $token);
+    if (!$participante) {
+        erro(404, 'Cadastro não encontrado. Refaça o cadastro.');
+    }
+    if (!$participante['is_admin']) {
+        erro(403, 'Acesso restrito ao administrador.');
+    }
+    return $participante;
+}

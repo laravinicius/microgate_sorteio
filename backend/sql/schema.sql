@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS participantes (
     empresa         VARCHAR(150),
     ip_origem       VARCHAR(45),
     user_agent      VARCHAR(255),
+    is_admin        BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_participantes_token   UNIQUE (token),
     CONSTRAINT uq_participantes_email   UNIQUE (email),

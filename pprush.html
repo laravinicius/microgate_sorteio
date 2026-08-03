@@ -392,10 +392,16 @@
 
     SorteioAPI.finalizarJogo(sessao.token, pontuacao, segundosJogados)
       .then((resultado) => {
-        numeroEl.textContent = resultado.numero_sorte;
-        if (resultado.novo_numero === false) {
-          notaEl.textContent = 'Nenhum novo número gerado — este é o seu número da sorte.';
+        if (resultado.admin) {
+          numeroEl.textContent = '—';
+          notaEl.textContent = 'Administrador: você jogou, mas não recebe número da sorte.';
           notaEl.style.display = 'block';
+        } else {
+          numeroEl.textContent = resultado.numero_sorte;
+          if (resultado.novo_numero === false) {
+            notaEl.textContent = 'Nenhum novo número gerado — este é o seu número da sorte.';
+            notaEl.style.display = 'block';
+          }
         }
         SorteioAPI.limparSessaoJogo();
       })
