@@ -29,12 +29,12 @@ async function loadComponents() {
             const isOpen = mobileMenu.classList.contains('translate-x-0');
 
             if (isOpen) {
-                mobileMenu.classList.replace('translate-x-0', '-translate-x-full');
+                mobileMenu.classList.replace('translate-x-0', 'translate-x-full');
                 menuOverlay.classList.add('hidden');
                 openIcon.classList.remove('hidden');
                 closeIcon.classList.add('hidden');
             } else {
-                mobileMenu.classList.replace('-translate-x-full', 'translate-x-0');
+                mobileMenu.classList.replace('translate-x-full', 'translate-x-0');
                 menuOverlay.classList.remove('hidden');
                 openIcon.classList.add('hidden');
                 closeIcon.classList.remove('hidden');

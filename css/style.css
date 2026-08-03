@@ -23,6 +23,14 @@ body {
     display: none;
 }
 
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 16px;
+}
+
 .mobile-only {
     display: inline-flex;
 }
@@ -34,6 +42,10 @@ body {
 @media (min-width: 985px) {
     .desktop-nav {
         display: flex;
+    }
+
+    .header-top {
+        justify-content: center;
     }
 
     .mobile-only,
@@ -53,6 +65,40 @@ body {
 
 .left-3 {
     left: 0.75rem;
+}
+
+.right-0 {
+    right: 0;
+}
+
+.border-l {
+    border-left-width: 1px;
+}
+
+.z-\[90\] {
+    z-index: 90;
+}
+
+.z-\[100\] {
+    z-index: 100;
+}
+
+#mobile-menu-button {
+    position: relative;
+    z-index: 110;
+}
+
+.translate-x-full {
+    --tw-translate-x: 100%;
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+#mobile-menu {
+    transform: translateX(100%);
+}
+
+#mobile-menu.translate-x-0 {
+    transform: translateX(0);
 }
 
 .-translate-y-1\/2 {

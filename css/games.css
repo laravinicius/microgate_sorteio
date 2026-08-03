@@ -101,3 +101,20 @@ html, body {
 #numero-sorte { font-size: 28px; color: var(--led-green); }
 #numero-sorte-erro { display: none; color: var(--led-red); }
 #numero-sorte-nota { display: none; color: var(--led-amber); }
+
+@media (max-width: 985px) {
+  :fullscreen #header-placeholder,
+  :fullscreen #footer-placeholder {
+    display: none;
+  }
+  :fullscreen main {
+    padding: 0;
+  }
+  :fullscreen #app {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-width: 100%;
+    border: none;
+    border-radius: 0;
+  }
+}
