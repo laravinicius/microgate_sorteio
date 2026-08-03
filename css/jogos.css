@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.card-jogo {
+    cursor: pointer;
+    transition: border-color .2s ease, transform .2s ease;
+}
+
+.card-jogo:hover {
+    border-color: rgba(255, 255, 255, .3);
+    transform: translateY(-2px);
+}
+
+.card-jogo:disabled,
+.card-jogo[data-disabled="true"] {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+}

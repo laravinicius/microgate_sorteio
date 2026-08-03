@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+
+    <link rel="stylesheet" href="./css/output.css">
+    <link rel="stylesheet" href="./css/index.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+
+</head>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('form-cadastro');
+        const msg = document.getElementById('form-mensagem');
+        const btn = document.getElementById('btn-cadastrar');
+        const btnLogin = document.getElementById('btn-login');
+        const btnVoltarCadastro = document.getElementById('btn-voltar-cadastro');
+        const campoNome = document.getElementById('campo-nome');
+        const campoEmpresa = document.getElementById('campo-empresa');
+        const titulo = document.getElementById('titulo-cadastro');
+        const descricao = document.getElementById('descricao-cadastro');
+
+        let modoLogin = false;
+
+        function mostrarMensagem(texto, tipo) {
+            msg.textContent = texto;
+            msg.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
+            msg.classList.add(tipo === 'erro' ? 'text-red-400' : 'text-emerald-400');
+        }
+
+        function alternarModoLogin(login) {
+            modoLogin = login;
+            campoNome.classList.toggle('hidden', login);
+            campoEmpresa.classList.toggle('hidden', login);
+            btnLogin.classList.toggle('hidden', login);
+            btnVoltarCadastro.classList.toggle('hidden', !login);
+            btn.textContent = login ? 'Entrar' : 'Continuar para o jogo';
+            titulo.textContent = login ? 'Entrar no Sorteio' : 'Participe do Sorteio';
+            descricao.textContent = login
+                ? 'Informe o e-mail e o celular usados no seu cadastro para acessar o sistema.'
+                : 'Preencha seus dados, jogue um minigame rápido (até 2 min) e receba seu número da sorte.';
+            document.getElementById('nome').required = !login;
+            msg.textContent = '';
+            msg.classList.add('hidden');
+        }
+
+        btnLogin.addEventListener('click', () => alternarModoLogin(true));
+        btnVoltarCadastro.addEventListener('click', () => alternarModoLogin(false));
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const payload = {
+                    email: document.getElementById('email').value.trim(),
+                    celular: document.getElementById('celular').value.trim(),
+                };
+                const resultado = modoLogin
+                    ? await SorteioAPI.login(payload)
+                    : await SorteioAPI.cadastrar({
+                        ...payload,
+                        nome: document.getElementById('nome').value.trim(),
+                        empresa: document.getElementById('empresa').value.trim(),
+                    });
+
+                SorteioAPI.salvarParticipante(resultado.participante_token);
+
+                if (resultado.tem_numero) {
+                    window.location.href = './meu-numero.html';
+                } else {
+                    window.location.href = './jogos.html';
+                }
+            } catch (err) {
+                mostrarMensagem(err.message, 'erro');
+                btn.disabled = false;
+                btn.textContent = modoLogin ? 'Entrar' : 'Continuar para o jogo';
+            }
+        });
+    });
+</script>
+
+<body class="bg-brand-dark text-brand-light dark:text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-20" id="header-placeholder"></div>
+
+            <main class="pt-32 pb-20 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
+                        <h1 id="titulo-cadastro" class="text-2xl font-bold text-center mb-2">Participe do Sorteio</h1>
+                        <p id="descricao-cadastro" class="text-sm text-gray-400 text-center mb-6">
+                            Preencha seus dados, jogue um minigame rápido (até 2 min) e receba seu número da sorte.
+                        </p>
+
+                        <form id="form-cadastro" class="space-y-6">
+                            <div id="campo-nome">
+                                <label for="nome" class="block text-sm mb-1">Nome completo *</label>
+                                <input id="nome" name="nome" type="text" required minlength="3"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm mb-1">E-mail *</label>
+                                <input id="email" name="email" type="email" required
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <div>
+                                <label for="celular" class="block text-sm mb-1">Celular (com DDD) *</label>
+                                <input id="celular" name="celular" type="tel" required placeholder="(41) 99999-8888"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <div id="campo-empresa">
+                                <label for="empresa" class="block text-sm mb-1">Empresa (opcional)</label>
+                                <input id="empresa" name="empresa" type="text"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+
+                            <div id="form-mensagem" class="text-sm hidden"></div>
+
+                            <button type="submit" id="btn-cadastrar"
+                                class="w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                Continuar para o jogo
+                            </button>
+
+                            <button type="button" id="btn-login"
+                                class="w-full font-semibold text-sm rounded-lg py-3 border border-white/10 text-white hover:bg-white/5 transition">
+                                Login
+                            </button>
+
+                            <button type="button" id="btn-voltar-cadastro"
+                                class="w-full hidden text-center text-sm text-gray-400 hover:text-white transition">
+                                Não tem cadastro? Criar cadastro
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+        </div>
+    </div>
+</body>
+
+</html>

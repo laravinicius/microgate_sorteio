@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escolha seu jogo | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/output.css">
+    <link rel="stylesheet" href="./css/jogos.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+
+</head>
+
+<body class="bg-brand-dark text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-20" id="header-placeholder"></div>
+
+            <main class="pt-32 pb-20 px-4">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-2xl font-bold mb-2">Escolha seu minigame</h1>
+                    <p class="text-sm text-gray-400 mb-8">Você tem até 2 minutos. Ao concluir, seu número da sorte é
+                        gerado na hora.</p>
+
+                    <div id="mensagem-bloqueio" class="hidden mb-6 text-sm text-amber-400"></div>
+
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <button data-jogo="firewall_defense"
+                            class="card-jogo bg-brand-dark border border-white/10 rounded-2xl p-6 text-left">
+                            <h2 class="text-lg font-semibold mb-1">🛡️ Firewall Defense</h2>
+                            <p class="text-sm text-gray-400">Bloqueie o tráfego malicioso antes que ele chegue ao
+                                datacenter.</p>
+                        </button>
+
+                        <button data-jogo="patch_panel_rush"
+                            class="card-jogo bg-brand-dark border border-white/10 rounded-2xl p-6 text-left">
+                            <h2 class="text-lg font-semibold mb-1">🔌 Patch Panel Rush</h2>
+                            <p class="text-sm text-gray-400">Conecte os cabos certos no patch panel o mais rápido
+                                possível.</p>
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10">
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const participanteToken = SorteioAPI.getParticipante();
+            const mensagemBloqueio = document.getElementById('mensagem-bloqueio');
+            const botoes = document.querySelectorAll('.card-jogo');
+
+            if (!participanteToken) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            // Aviso informativo: quem já tem número pode jogar de novo, mas sem gerar novo número
+            SorteioAPI.consultarNumero(participanteToken)
+                .then((dados) => {
+                    if (dados.tem_numero) {
+                        mensagemBloqueio.textContent =
+                            `Você já tem o número ${dados.numero_sorte}. Pode jogar novamente, mas nenhum novo número será gerado.`;
+                        mensagemBloqueio.classList.remove('hidden');
+                    }
+                })
+                .catch(() => {});
+
+            const destinos = {
+                firewall_defense: './fdefense.html',
+                patch_panel_rush: './pprush.html',
+            };
+
+            botoes.forEach((botao) => {
+                botao.addEventListener('click', async () => {
+                    botoes.forEach((b) => (b.disabled = true));
+                    try {
+                        const jogo = botao.dataset.jogo;
+                        const resultado = await SorteioAPI.iniciarJogo(participanteToken, jogo);
+                        SorteioAPI.salvarSessaoJogo(resultado.sessao_token, jogo);
+                        window.location.href = destinos[jogo];
+                    } catch (err) {
+                        mensagemBloqueio.textContent = err.message;
+                        mensagemBloqueio.classList.remove('hidden');
+                        botoes.forEach((b) => (b.disabled = false));
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

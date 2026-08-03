@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Patch Panel Rush | Microgate Informática</title>
+<link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/output.css">
+<link rel="stylesheet" href="./css/games.css">
+<link rel="stylesheet" href="./css/pprush.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="./js/theme.js"></script>
+<script src="./js/sorteio-api.js"></script>
+<script src="./js/components.js" defer></script>
+</head>
+<body class="bg-brand-dark text-brand-light">
+<div class="boxed-layout">
+  <div class="content-wrapper min-h-screen">
+    <div class="pb-20" id="header-placeholder"></div>
+
+    <main class="pt-32 pb-20 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div id="app">
+          <div class="rack-ear"></div>
+          <div id="hud">
+            <div class="hud-item">
+              <span class="hud-label">RODADA</span>
+              <span class="hud-value" id="hud-round">1/3</span>
+            </div>
+            <div class="hud-item center">
+              <span class="hud-label">TEMPO</span>
+              <span class="hud-value timer" id="hud-timer">20</span>
+            </div>
+            <div class="hud-item right">
+              <span class="hud-label">SCORE</span>
+              <span class="hud-value" id="hud-score">0</span>
+            </div>
+          </div>
+
+          <div id="board">
+            <svg id="cables"></svg>
+            <div class="rack-panel left">
+              <div class="panel-label">SW-01</div>
+              <div class="ports" id="leftPorts"></div>
+            </div>
+            <div class="rack-panel right">
+              <div class="panel-label">PP-A</div>
+              <div class="ports" id="rightPorts"></div>
+            </div>
+          </div>
+
+          <div id="status">Arraste de uma porta do switch até a porta correspondente no patch panel.</div>
+
+          <!-- START OVERLAY -->
+          <div class="overlay" id="overlay-start">
+            <div class="eyebrow">Simulação de Cabeamento</div>
+            <div class="title">PATCH PANEL<br>RUSH</div>
+            <div class="subtitle">Conecte cada porta do switch à porta correspondente no patch panel antes que o tempo acabe. Menos cruzamentos = mais pontos de organização.</div>
+            <button class="btn" id="btn-start">INICIAR TURNO</button>
+          </div>
+
+          <!-- ROUND TRANSITION OVERLAY -->
+          <div class="overlay hidden" id="overlay-round">
+            <div class="eyebrow" id="round-eyebrow">Rodada concluída</div>
+            <div class="title" id="round-title">RODADA 2</div>
+            <div class="subtitle" id="round-subtitle">6 conexões. Prepare-se.</div>
+          </div>
+
+          <!-- GAME OVER OVERLAY -->
+          <div class="overlay hidden" id="overlay-end">
+            <div class="eyebrow">Turno Encerrado</div>
+            <div class="title">RELATÓRIO<br>DE SERVIÇO</div>
+            <div class="stat-row">
+              <div class="stat"><span class="stat-value" id="end-score">0</span><span class="stat-label">SCORE FINAL</span></div>
+              <div class="stat"><span class="stat-value" id="end-acc">0%</span><span class="stat-label">PRECISÃO</span></div>
+            </div>
+            <div class="rank-badge" id="end-rank">TÉCNICO JÚNIOR</div>
+            <div id="numero-sorte-wrap">
+              <div class="stat-label">SEU NÚMERO DA SORTE</div>
+              <div class="title" id="numero-sorte">gerando...</div>
+              <div class="subtitle" id="numero-sorte-erro"></div>
+              <div class="subtitle" id="numero-sorte-nota"></div>
+              <button class="btn hidden" id="btn-tentar-novamente">TENTAR NOVAMENTE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const sessao = SorteioAPI.getSessaoJogo();
+  if (!SorteioAPI.getParticipante() || sessao.jogo !== 'patch_panel_rush' || !sessao.token) {
+    window.location.href = './jogos.html';
+    return;
+  }
+
+  const CABLE_COLORS = ['#3B6FD6','#E8C547','#3FA34D','#E8792E','#D6483B','#9AA0A6','#8A5FBF','#5CC9C0'];
+  const ROUNDS = [
+    { n: 4, time: 20 },
+    { n: 6, time: 26 },
+    { n: 8, time: 32 }
+  ];
+
+  const leftPortsEl = document.getElementById('leftPorts');
+  const rightPortsEl = document.getElementById('rightPorts');
+  const svg = document.getElementById('cables');
+  const statusEl = document.getElementById('status');
+  const hudRound = document.getElementById('hud-round');
+  const hudTimer = document.getElementById('hud-timer');
+  const hudScore = document.getElementById('hud-score');
+  const overlayStart = document.getElementById('overlay-start');
+  const overlayRound = document.getElementById('overlay-round');
+  const overlayEnd = document.getElementById('overlay-end');
+  const board = document.getElementById('board');
+
+  let state = null;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function buildRound(roundIdx){
+    const cfg = ROUNDS[roundIdx];
+    const ids = Array.from({length: cfg.n}, (_,i)=>i);
+    const rightOrder = shuffle(ids);
+
+    leftPortsEl.innerHTML = '';
+    rightPortsEl.innerHTML = '';
+    svg.innerHTML = '';
+
+    ids.forEach(id=>{
+      const p = document.createElement('div');
+      p.className = 'port';
+      p.dataset.id = id;
+      p.dataset.side = 'left';
+      p.innerHTML = `<div class="jack"></div><div class="port-label">${id+1}</div>`;
+      leftPortsEl.appendChild(p);
+    });
+    rightOrder.forEach(id=>{
+      const p = document.createElement('div');
+      p.className = 'port';
+      p.dataset.id = id;
+      p.dataset.side = 'right';
+      p.innerHTML = `<div class="jack"></div><div class="port-label">${id+1}</div>`;
+      rightPortsEl.appendChild(p);
+    });
+
+    state.round = roundIdx;
+    state.total = cfg.n;
+    state.connected = 0;
+    state.timeLeft = cfg.time;
+    state.roundStartTime = cfg.time;
+    state.connections = [];
+    state.wrongAttempts = 0;
+    state.attempts = 0;
+
+    hudRound.textContent = `${roundIdx+1}/${ROUNDS.length}`;
+    updateTimerUI();
+    statusEl.textContent = `Conecte as ${cfg.n} portas antes do tempo acabar.`;
+
+    attachPortEvents();
+    startTimer();
+  }
+
+  function updateTimerUI(){
+    hudTimer.textContent = state.timeLeft;
+    hudTimer.classList.toggle('low', state.timeLeft <= 5);
+  }
+
+  function startTimer(){
+    clearInterval(state.timerHandle);
+    state.timerHandle = setInterval(()=>{
+      state.timeLeft--;
+      updateTimerUI();
+      if(state.timeLeft <= 0){
+        clearInterval(state.timerHandle);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function portCenter(el){
+    const r = el.getBoundingClientRect();
+    const b = board.getBoundingClientRect();
+    const jack = el.querySelector('.jack').getBoundingClientRect();
+    return {
+      x: jack.left + jack.width/2 - b.left,
+      y: jack.top + jack.height/2 - b.top
+    };
+  }
+
+  function drawCable(id, p1, p2, color, permanent){
+    const dx = (p2.x - p1.x) * 0.5;
+    const sag = permanent ? 18 : 0;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const d = `M ${p1.x} ${p1.y} C ${p1.x+dx} ${p1.y+sag}, ${p2.x-dx} ${p2.y+sag}, ${p2.x} ${p2.y}`;
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', permanent ? '4' : '3');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('opacity', permanent ? '0.9' : '0.55');
+    if(id !== undefined) path.dataset.cableId = id;
+    svg.appendChild(path);
+    return path;
+  }
+
+  function redrawPermanentCables(){
+    svg.querySelectorAll('path[data-cable-id]').forEach(p=>{
+      if(!p.dataset.temp) p.remove();
+    });
+    state.connections.forEach(c=>{
+      drawCable(c.id, c.p1, c.p2, c.color, true);
+    });
+  }
+
+  let dragState = null;
+
+  function attachPortEvents(){
+    const allPorts = [...leftPortsEl.children, ...rightPortsEl.children];
+    allPorts.forEach(p=>{
+      p.onpointerdown = (e)=> onPortDown(e, p);
+    });
+  }
+
+  function onPortDown(e, portEl){
+    if(portEl.classList.contains('connected')) return;
+    e.preventDefault();
+    const start = portCenter(portEl);
+    dragState = {
+      fromEl: portEl,
+      fromSide: portEl.dataset.side,
+      id: portEl.dataset.id,
+      start
+    };
+    portEl.classList.add('dragging');
+    let tempPath = drawCable('temp', start, start, '#8892a6', false);
+    tempPath.dataset.temp = '1';
+
+    function onMove(ev){
+      const b = board.getBoundingClientRect();
+      const pt = { x: ev.clientX - b.left, y: ev.clientY - b.top };
+      const dx = (pt.x - start.x) * 0.5;
+      tempPath.setAttribute('d', `M ${start.x} ${start.y} C ${start.x+dx} ${start.y}, ${pt.x-dx} ${pt.y}, ${pt.x} ${pt.y}`);
+    }
+    function onUp(ev){
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      portEl.classList.remove('dragging');
+      tempPath.remove();
+
+      const targetEl = document.elementFromPoint(ev.clientX, ev.clientY);
+      const targetPort = targetEl ? targetEl.closest('.port') : null;
+      dragState = null;
+
+      if(!targetPort || targetPort === portEl) return;
+      if(targetPort.dataset.side === portEl.dataset.side) return;
+      if(targetPort.classList.contains('connected')) return;
+
+      state.attempts++;
+      if(targetPort.dataset.id === portEl.dataset.id){
+        makeConnection(portEl, targetPort);
+      } else {
+        state.wrongAttempts++;
+        targetPort.classList.add('wrong');
+        portEl.classList.add('wrong');
+        setTimeout(()=>{
+          targetPort.classList.remove('wrong');
+          portEl.classList.remove('wrong');
+        }, 250);
+        bumpScore(-20);
+        statusEl.textContent = 'Porta incorreta. -20 pontos.';
+      }
+    }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  function makeConnection(leftEl, rightEl){
+    const color = CABLE_COLORS[parseInt(leftEl.dataset.id) % CABLE_COLORS.length];
+    const p1 = portCenter(leftEl.dataset.side === 'left' ? leftEl : rightEl);
+    const p2 = portCenter(leftEl.dataset.side === 'left' ? rightEl : leftEl);
+
+    leftEl.classList.add('connected');
+    rightEl.classList.add('connected');
+    leftEl.style.setProperty('--led-color', color);
+    rightEl.style.setProperty('--led-color', color);
+
+    const leftPos = [...leftPortsEl.children].indexOf(leftEl.dataset.side === 'left' ? leftEl : rightEl);
+    const rightPos = [...rightPortsEl.children].indexOf(leftEl.dataset.side === 'right' ? leftEl : rightEl);
+
+    state.connections.push({ id: parseInt(leftEl.dataset.id), leftPos, rightPos, p1, p2, color });
+    state.connected++;
+
+    bumpScore(100);
+    redrawPermanentCables();
+    statusEl.textContent = `Conexão ${state.connected}/${state.total} feita. +100`;
+
+    if(state.connected >= state.total){
+      clearInterval(state.timerHandle);
+      finishRound();
+    }
+  }
+
+  function bumpScore(delta){
+    state.score = Math.max(0, state.score + delta);
+    hudScore.textContent = state.score;
+  }
+
+  function countCrossings(){
+    const conns = state.connections;
+    let crossings = 0;
+    for(let i=0;i<conns.length;i++){
+      for(let j=i+1;j<conns.length;j++){
+        const a = conns[i], b = conns[j];
+        if((a.leftPos - b.leftPos) * (a.rightPos - b.rightPos) < 0) crossings++;
+      }
+    }
+    return crossings;
+  }
+
+  function finishRound(){
+    const n = state.total;
+    const totalPairs = n*(n-1)/2;
+    const crossings = countCrossings();
+    const orgBonus = Math.max(0, (totalPairs - crossings)) * 5;
+    const timeBonus = state.timeLeft * 4;
+
+    bumpScore(orgBonus + timeBonus);
+
+    const nextRound = state.round + 1;
+    if(nextRound >= ROUNDS.length){
+      setTimeout(endGame, 500);
+      return;
+    }
+
+    document.getElementById('round-eyebrow').textContent =
+      `Rodada concluída · Organização +${orgBonus} · Tempo +${timeBonus}`;
+    document.getElementById('round-title').textContent = `RODADA ${nextRound+1}`;
+    document.getElementById('round-subtitle').textContent = `${ROUNDS[nextRound].n} conexões. Prepare-se.`;
+    overlayRound.classList.remove('hidden');
+
+    setTimeout(()=>{
+      overlayRound.classList.add('hidden');
+      buildRound(nextRound);
+    }, 1800);
+  }
+
+  function endGame(){
+    clearInterval(state.timerHandle);
+    const totalAttempts = state.attempts + state.wrongAttempts;
+    const acc = state.attempts > 0 ? Math.round((state.attempts - state.wrongAttempts) / state.attempts * 100) : 0;
+    const accClamped = Math.max(0, Math.min(100, acc));
+
+    document.getElementById('end-score').textContent = state.score;
+    document.getElementById('end-acc').textContent = accClamped + '%';
+
+    let rank = 'TÉCNICO JÚNIOR';
+    if(state.score >= 1400) rank = 'ARQUITETO DE REDE';
+    else if(state.score >= 900) rank = 'TÉCNICO SÊNIOR';
+    else if(state.score >= 500) rank = 'TÉCNICO PLENO';
+    document.getElementById('end-rank').textContent = rank;
+
+    overlayEnd.classList.remove('hidden');
+
+    const segundosJogados = (Date.now() - state.startedAt) / 1000;
+    enviarResultado(state.score, segundosJogados);
+  }
+
+  function enviarResultado(pontuacao, segundosJogados){
+    const numeroEl = document.getElementById('numero-sorte');
+    const erroEl = document.getElementById('numero-sorte-erro');
+    const notaEl = document.getElementById('numero-sorte-nota');
+    const btnRetry = document.getElementById('btn-tentar-novamente');
+
+    numeroEl.textContent = 'gerando...';
+    erroEl.style.display = 'none';
+    notaEl.style.display = 'none';
+    btnRetry.classList.add('hidden');
+
+    SorteioAPI.finalizarJogo(sessao.token, pontuacao, segundosJogados)
+      .then((resultado) => {
+        numeroEl.textContent = resultado.numero_sorte;
+        if (resultado.novo_numero === false) {
+          notaEl.textContent = 'Nenhum novo número gerado — este é o seu número da sorte.';
+          notaEl.style.display = 'block';
+        }
+        SorteioAPI.limparSessaoJogo();
+      })
+      .catch((err) => {
+        if (err.data && err.data.numero_sorte) {
+          numeroEl.textContent = err.data.numero_sorte;
+          SorteioAPI.limparSessaoJogo();
+          return;
+        }
+        numeroEl.textContent = '--';
+        erroEl.textContent = err.message;
+        erroEl.style.display = 'block';
+        btnRetry.classList.remove('hidden');
+        btnRetry.onclick = () => enviarResultado(pontuacao, segundosJogados);
+      });
+  }
+
+  function newGame(){
+    state = { score: 0, timerHandle: null, startedAt: Date.now() };
+    hudScore.textContent = '0';
+    overlayEnd.classList.add('hidden');
+    overlayRound.classList.add('hidden');
+    buildRound(0);
+  }
+
+  document.getElementById('btn-start').onclick = ()=>{
+    overlayStart.classList.add('hidden');
+    newGame();
+  };
+  window.addEventListener('resize', ()=>{
+    if(state && state.connections) redrawPermanentCables();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# --- Credenciais / configuração sensível ---
+backend/config/database.php
+backend/config/database.*.php
+!backend/config/database.example.php
+.env
+.env.*
+!.env.example
+
+# --- SO / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Logs / temporários ---
+*.log
+*.tmp
+
+# --- PHP ---
+*.cache

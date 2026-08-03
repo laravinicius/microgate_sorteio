@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Firewall Defense | Microgate Informática</title>
+<link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/output.css">
+<link rel="stylesheet" href="./css/games.css">
+<link rel="stylesheet" href="./css/fdefense.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="./js/theme.js"></script>
+<script src="./js/components.js" defer></script>
+<script src="./js/sorteio-api.js"></script>
+
+</head>
+<body class="bg-brand-dark text-brand-light">
+<div class="boxed-layout">
+  <div class="content-wrapper min-h-screen">
+    <div class="pb-20" id="header-placeholder"></div>
+
+    <main class="pt-32 pb-20 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div id="app">
+          <div class="rack-ear"></div>
+          <div id="hud">
+            <div class="hud-item"><span class="hud-label">COMBO</span><span class="hud-value" id="hud-combo">x1</span></div>
+            <div class="hud-item center"><span class="hud-label">TEMPO</span><span class="hud-value timer" id="hud-timer">60</span></div>
+            <div class="hud-item right"><span class="hud-label">SCORE</span><span class="hud-value" id="hud-score">0</span></div>
+          </div>
+
+          <div id="integrity-wrap">
+            <div id="integrity-label"><span>INTEGRIDADE DO FIREWALL</span><span id="integrity-pct">100%</span></div>
+            <div id="integrity-bar"><div id="integrity-fill"></div></div>
+          </div>
+
+          <div id="board">
+            <div id="defense-line"></div>
+            <div id="server-label">DATACENTER</div>
+          </div>
+
+          <div id="status">Toque nos pacotes maliciosos antes que cheguem à linha vermelha. Deixe o tráfego legítimo passar.</div>
+
+          <div class="overlay" id="overlay-start">
+            <div class="eyebrow">Simulação de Perímetro</div>
+            <div class="title">FIREWALL<br>DEFENSE</div>
+            <div class="subtitle">Pacotes descem em direção ao datacenter. Toque para bloquear os maliciosos antes da linha vermelha — deixe o tráfego legítimo passar sozinho.</div>
+            <div class="legend"><span class="g">■ legítimo: deixar passar</span></div>
+            <div class="legend"><span class="r">■ malicioso: tocar para bloquear</span></div>
+            <button class="btn" id="btn-start">INICIAR DEFESA</button>
+          </div>
+
+          <div class="overlay hidden" id="overlay-end">
+            <div class="eyebrow" id="end-reason">Turno Encerrado</div>
+            <div class="title">RELATÓRIO<br>DE INCIDENTE</div>
+            <div class="stat-row">
+              <div class="stat"><span class="stat-value" id="end-score">0</span><span class="stat-label">SCORE FINAL</span></div>
+              <div class="stat"><span class="stat-value" id="end-acc">0%</span><span class="stat-label">PRECISÃO</span></div>
+            </div>
+            <div class="rank-badge" id="end-rank">ESTAGIÁRIO DE SOC</div>
+            <div id="numero-sorte-wrap">
+              <div class="stat-label">SEU NÚMERO DA SORTE</div>
+              <div class="title" id="numero-sorte">gerando...</div>
+              <div class="subtitle" id="numero-sorte-erro"></div>
+              <div class="subtitle" id="numero-sorte-nota"></div>
+              <button class="btn hidden" id="btn-tentar-novamente">TENTAR NOVAMENTE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const sessao = SorteioAPI.getSessaoJogo();
+  if (!SorteioAPI.getParticipante() || sessao.jogo !== 'firewall_defense' || !sessao.token) {
+    window.location.href = './jogos.html';
+    return;
+  }
+
+  const TIME_LIMIT = 60;
+  const LANES = 3;
+
+  const LEGIT = [
+    { label:'HTTP', icon:'🌐' }, { label:'DNS', icon:'📖' },
+    { label:'E-mail', icon:'✉️' }, { label:'Backup', icon:'💾' },
+    { label:'VPN', icon:'🔒' }
+  ];
+  const MALICIOUS = [
+    { label:'DDoS', icon:'💥' }, { label:'Vírus', icon:'🦠' },
+    { label:'Exploit', icon:'🐛' }, { label:'Ransomware', icon:'🔐' },
+    { label:'Port Scan', icon:'🔍' }
+  ];
+
+  const board = document.getElementById('board');
+  const hudCombo = document.getElementById('hud-combo');
+  const hudTimer = document.getElementById('hud-timer');
+  const hudScore = document.getElementById('hud-score');
+  const statusEl = document.getElementById('status');
+  const integrityFill = document.getElementById('integrity-fill');
+  const integrityPct = document.getElementById('integrity-pct');
+  const overlayStart = document.getElementById('overlay-start');
+  const overlayEnd = document.getElementById('overlay-end');
+
+  let state = null;
+  let rafHandle = null;
+  let laneDividersDrawn = false;
+
+  function drawLaneDividers(){
+    if(laneDividersDrawn) return;
+    const w = board.clientWidth;
+    for(let i=1;i<LANES;i++){
+      const d = document.createElement('div');
+      d.className = 'lane-divider';
+      d.style.left = (w/LANES*i) + 'px';
+      board.appendChild(d);
+    }
+    const line = document.getElementById('defense-line');
+    line.style.top = (board.clientHeight - 46) + 'px';
+    laneDividersDrawn = true;
+  }
+
+  function laneX(lane){
+    const w = board.clientWidth;
+    return (w/LANES) * (lane + 0.5);
+  }
+
+  function spawnPacket(){
+    const isMalicious = Math.random() < 0.5;
+    const pool = isMalicious ? MALICIOUS : LEGIT;
+    const def = pool[Math.floor(Math.random()*pool.length)];
+    const lane = Math.floor(Math.random()*LANES);
+
+    const el = document.createElement('div');
+    el.className = 'packet ' + (isMalicious ? 'malicious' : 'legit');
+    el.innerHTML = `<span class="p-icon">${def.icon}</span><span>${def.label}</span>`;
+    el.style.left = laneX(lane) + 'px';
+    el.style.top = '-20px';
+    board.appendChild(el);
+
+    const packet = {
+      el, lane, y: -20, x: laneX(lane),
+      speed: state.speed, malicious: isMalicious, resolved:false
+    };
+    el.onpointerdown = (e)=>{ e.preventDefault(); resolvePacket(packet, 'tapped'); };
+    state.packets.push(packet);
+  }
+
+  function resolvePacket(p, cause){
+    if(p.resolved) return;
+    p.resolved = true;
+
+    let correct;
+    if(cause === 'tapped'){
+      correct = p.malicious;
+    } else {
+      correct = !p.malicious;
+    }
+
+    if(correct){
+      state.combo++;
+      state.correctCount++;
+      const gain = 10 * Math.min(state.combo, 8);
+      bumpScore(gain);
+      p.el.classList.add('popped');
+      statusEl.innerHTML = cause === 'tapped'
+        ? `Bloqueado: ${p.malicious?'ameaça neutralizada':''} +${gain} <span class="combo">combo x${Math.min(state.combo,8)}</span>`
+        : `Tráfego legítimo liberado +${gain}`;
+    } else {
+      state.combo = 1;
+      state.mistakes++;
+      damageIntegrity(15);
+      p.el.classList.add('popped');
+      statusEl.textContent = cause === 'tapped'
+        ? 'Falso positivo: tráfego legítimo bloqueado. -integridade'
+        : 'Ameaça não bloqueada a tempo! -integridade';
+    }
+    hudCombo.textContent = 'x' + Math.min(state.combo,8);
+    setTimeout(()=>p.el.remove(), 200);
+  }
+
+  function bumpScore(delta){
+    state.score += delta;
+    hudScore.textContent = state.score;
+  }
+
+  function damageIntegrity(amount){
+    state.integrity = Math.max(0, state.integrity - amount);
+    integrityFill.style.width = state.integrity + '%';
+    integrityPct.textContent = state.integrity + '%';
+    integrityFill.classList.toggle('warn', state.integrity <= 60 && state.integrity > 30);
+    integrityFill.classList.toggle('crit', state.integrity <= 30);
+    if(state.integrity <= 0){
+      endGame('Firewall comprometido!');
+    }
+  }
+
+  function updateTimerUI(){
+    hudTimer.textContent = state.timeLeft;
+    hudTimer.classList.toggle('low', state.timeLeft <= 10);
+  }
+
+  function loop(ts){
+    if(!state.lastTs) state.lastTs = ts;
+    const dt = (ts - state.lastTs) / 1000;
+    state.lastTs = ts;
+
+    const bottomLimit = board.clientHeight - 46;
+    for(let i=state.packets.length-1;i>=0;i--){
+      const p = state.packets[i];
+      if(p.resolved) continue;
+      p.y += p.speed * dt;
+      p.el.style.top = p.y + 'px';
+      if(p.y >= bottomLimit){
+        resolvePacket(p, 'reached');
+      }
+    }
+    state.packets = state.packets.filter(p => !p.resolved);
+
+    state.elapsedSinceSpawn += dt;
+    const spawnInterval = Math.max(0.55, 1.15 - state.elapsed/60);
+    if(state.elapsedSinceSpawn >= spawnInterval){
+      state.elapsedSinceSpawn = 0;
+      spawnPacket();
+    }
+    state.speed = 55 + Math.min(state.elapsed, 45) * 1.8;
+    state.elapsed += dt;
+
+    if(state.running) rafHandle = requestAnimationFrame(loop);
+  }
+
+  function startTimer(){
+    clearInterval(state.timerHandle);
+    state.timerHandle = setInterval(()=>{
+      state.timeLeft--;
+      updateTimerUI();
+      if(state.timeLeft <= 0){
+        clearInterval(state.timerHandle);
+        endGame('Turno completo!');
+      }
+    }, 1000);
+  }
+
+  function endGame(reason){
+    state.running = false;
+    clearInterval(state.timerHandle);
+    cancelAnimationFrame(rafHandle);
+    board.querySelectorAll('.packet').forEach(e=>e.remove());
+
+    const totalActions = state.correctCount + state.mistakes;
+    const acc = totalActions > 0 ? Math.round(state.correctCount/totalActions*100) : 0;
+
+    document.getElementById('end-reason').textContent = reason;
+    document.getElementById('end-score').textContent = state.score;
+    document.getElementById('end-acc').textContent = acc + '%';
+
+    let rank = 'ESTAGIÁRIO DE SOC';
+    if(state.score >= 400) rank = 'ANALISTA DE SOC';
+    if(state.score >= 800) rank = 'GUARDA DE PERÍMETRO';
+    if(state.score >= 1300) rank = 'MURALHA IMPENETRÁVEL';
+    document.getElementById('end-rank').textContent = rank;
+
+    overlayEnd.classList.remove('hidden');
+    enviarResultado(state.score, state.elapsed);
+  }
+
+  function enviarResultado(pontuacao, segundosJogados){
+    const numeroEl = document.getElementById('numero-sorte');
+    const erroEl = document.getElementById('numero-sorte-erro');
+    const notaEl = document.getElementById('numero-sorte-nota');
+    const btnRetry = document.getElementById('btn-tentar-novamente');
+
+    numeroEl.textContent = 'gerando...';
+    erroEl.style.display = 'none';
+    notaEl.style.display = 'none';
+    btnRetry.classList.add('hidden');
+
+    SorteioAPI.finalizarJogo(sessao.token, pontuacao, segundosJogados)
+      .then((resultado) => {
+        numeroEl.textContent = resultado.numero_sorte;
+        if (resultado.novo_numero === false) {
+          notaEl.textContent = 'Nenhum novo número gerado — este é o seu número da sorte.';
+          notaEl.style.display = 'block';
+        }
+        SorteioAPI.limparSessaoJogo();
+      })
+      .catch((err) => {
+        if (err.data && err.data.numero_sorte) {
+          numeroEl.textContent = err.data.numero_sorte;
+          SorteioAPI.limparSessaoJogo();
+          return;
+        }
+        numeroEl.textContent = '--';
+        erroEl.textContent = err.message;
+        erroEl.style.display = 'block';
+        btnRetry.classList.remove('hidden');
+        btnRetry.onclick = () => enviarResultado(pontuacao, segundosJogados);
+      });
+  }
+
+  function newGame(){
+    board.querySelectorAll('.packet').forEach(e=>e.remove());
+    state = {
+      score:0, combo:1, integrity:100, timeLeft: TIME_LIMIT,
+      packets:[], running:true, lastTs:0, elapsed:0, elapsedSinceSpawn:1,
+      speed:55, correctCount:0, mistakes:0, timerHandle:null
+    };
+    hudScore.textContent = '0';
+    hudCombo.textContent = 'x1';
+    integrityFill.style.width = '100%';
+    integrityFill.classList.remove('warn','crit');
+    integrityPct.textContent = '100%';
+    overlayEnd.classList.add('hidden');
+    updateTimerUI();
+    statusEl.textContent = 'Toque nos pacotes maliciosos antes que cheguem à linha vermelha.';
+    drawLaneDividers();
+    startTimer();
+    rafHandle = requestAnimationFrame(loop);
+  }
+
+  document.getElementById('btn-start').onclick = ()=>{
+    overlayStart.classList.add('hidden');
+    drawLaneDividers();
+    newGame();
+  };
+  window.addEventListener('resize', ()=>{
+    laneDividersDrawn = false;
+    board.querySelectorAll('.lane-divider').forEach(e=>e.remove());
+    drawLaneDividers();
+  });
+})();
+</script>
+</body>
+</html>

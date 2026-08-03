@@ -1,0 +1,9 @@
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+#form-cadastro input:focus {
+    border-color: rgba(255, 255, 255, .35);
+    background-color: #161616;
+}
