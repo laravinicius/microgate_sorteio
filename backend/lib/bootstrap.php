@@ -82,6 +82,17 @@ function validar_email(string $email): bool
     return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
+// Client ID do OAuth "Login com Google" (público). Requer backend/config/google.php.
+function get_google_client_id(): string
+{
+    static $clientId = null;
+    if ($clientId === null) {
+        $cfg = require __DIR__ . '/../config/google.php';
+        $clientId = trim((string)($cfg['client_id'] ?? ''));
+    }
+    return $clientId;
+}
+
 // Normaliza celular para apenas dígitos, ex: (11) 99999-8888 -> 11999998888
 function normalizar_celular(string $celular): string
 {

@@ -3,7 +3,7 @@
 // POST /api/finalizar-jogo.php
 // Fecha a sessão de jogo e gera o número da sorte (único no banco).
 //
-// Body (JSON): { sessao_token, pontuacao, segundos_jogados }
+// Body (JSON): { participante_token, sessao_token, pontuacao, segundos_jogados }
 // =====================================================================
 
 declare(strict_types=1);
@@ -12,22 +12,42 @@ require __DIR__ . '/../lib/bootstrap.php';
 exigir_post();
 $dados = json_input();
 
-$sessaoToken     = trim((string)($dados['sessao_token'] ?? ''));
-$pontuacao       = (int)($dados['pontuacao'] ?? 0);
-$segundosJogados = (float)($dados['segundos_jogados'] ?? 0);
+$sessaoToken         = trim((string)($dados['sessao_token'] ?? ''));
+$participanteToken   = trim((string)($dados['participante_token'] ?? ''));
+$pontuacao           = (int)($dados['pontuacao'] ?? 0);
+$segundosJogados     = (float)($dados['segundos_jogados'] ?? 0);
 
 if ($sessaoToken === '') {
     erro(422, 'Sessão de jogo inválida.');
 }
+if ($participanteToken === '') {
+    erro(422, 'Cadastro não encontrado. Refaça o cadastro.');
+}
 
-// Duração mínima plausível: evita chamadas diretas à API sem realmente jogar.
-// Os dois minigames atuais duram até 60s; exigimos ao menos 5s jogados.
-const SEGUNDOS_MINIMOS = 5;
+// Limites de tempo validados no servidor: os minigames duram até 60s,
+// então qualquer tempo acima disso (ou sessão velha) é inválido.
+const SEGUNDOS_MINIMOS          = 5;   // duração mínima plausível de uma partida
+const SEGUNDOS_MAXIMO           = 70;  // jogos duram até 60s + folga de rede
+const SEGUNDOS_FOLGA_REPORTADO  = 15;  // tolerância entre o tempo reportado e o decorrido no servidor
+const IDADE_SESSAO_MAXIMA       = 600; // 10 min: sessão antiga expira (token de sessão tem validade)
+
+if ($pontuacao < 0 || $pontuacao > 50000) {
+    erro(422, 'Pontuação inválida.');
+}
 
 $pdo = get_pdo();
 
+// Confirma o participante dono da sessão antes de prosseguir.
+$stmt = $pdo->prepare('SELECT id FROM participantes WHERE token = :token LIMIT 1');
+$stmt->execute(['token' => $participanteToken]);
+$participanteAuth = $stmt->fetch();
+if (!$participanteAuth) {
+    erro(404, 'Cadastro não encontrado. Refaça o cadastro.');
+}
+
 $stmt = $pdo->prepare(
-    'SELECT sj.id, sj.jogo, sj.status, sj.participante_id
+    'SELECT sj.id, sj.jogo, sj.status, sj.participante_id,
+            EXTRACT(EPOCH FROM (now() - sj.iniciado_em)) AS idade_sessao
      FROM sessoes_jogo sj
      WHERE sj.token = :token'
 );
@@ -37,10 +57,24 @@ $sessao = $stmt->fetch();
 if (!$sessao) {
     erro(404, 'Sessão de jogo não encontrada.');
 }
+if ((int)$sessao['participante_id'] !== (int)$participanteAuth['id']) {
+    erro(403, 'Esta sessão de jogo não pertence ao participante.');
+}
 if ($sessao['status'] !== 'em_andamento') {
     erro(409, 'Esta sessão de jogo já foi finalizada.');
 }
-if ($segundosJogados < SEGUNDOS_MINIMOS) {
+
+$idadeSessao = (float)($sessao['idade_sessao'] ?? 0);
+if ($segundosJogados < SEGUNDOS_MINIMOS || $segundosJogados > SEGUNDOS_MAXIMO) {
+    erro(422, 'Tempo de jogo inválido.');
+}
+if ($idadeSessao < SEGUNDOS_MINIMOS) {
+    erro(422, 'Tempo de jogo inválido.');
+}
+if ($idadeSessao > IDADE_SESSAO_MAXIMA) {
+    erro(422, 'Esta sessão de jogo expirou. Inicie uma nova partida.');
+}
+if ($segundosJogados > $idadeSessao + SEGUNDOS_FOLGA_REPORTADO) {
     erro(422, 'Tempo de jogo inválido.');
 }
 

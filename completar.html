@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete seu cadastro | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/output.css">
+    <script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+</head>
+
+<body class="bg-brand-dark text-brand-light dark:text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-8" id="header-placeholder"></div>
+
+            <main class="pb-20 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
+                        <h1 class="text-2xl font-bold text-center mb-2">Complete seu cadastro</h1>
+                        <p class="text-sm text-gray-400 text-center mb-6">
+                            Para participar do sorteio precisamos de um contato e do seu consentimento.
+                        </p>
+
+                        <form id="form-completar" class="space-y-6">
+                            <div>
+                                <label for="celular" class="block text-sm mb-1">Celular (com DDD) *</label>
+                                <input id="celular" name="celular" type="tel" required placeholder="(41) 99999-8888"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <div>
+                                <label for="empresa" class="block text-sm mb-1">Empresa (opcional)</label>
+                                <input id="empresa" name="empresa" type="text"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+
+                            <label class="flex items-start gap-3 text-sm text-gray-300 cursor-pointer">
+                                <input id="consentimento" type="checkbox" required class="mt-1">
+                                <span>
+                                    Li e aceito a
+                                    <a href="./privacidade.html" target="_blank" rel="noopener"
+                                        class="underline hover:text-white transition">Política de Privacidade</a>,
+                                    incluindo o tratamento dos meus dados pessoais para a realização do sorteio,
+                                    conforme a Lei Geral de Proteção de Dados (LGPD).
+                                </span>
+                            </label>
+
+                            <div id="form-mensagem" class="text-sm text-red-400 hidden"></div>
+
+                            <button type="submit" id="btn-completar"
+                                class="w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                Concluir cadastro
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = SorteioAPI.getParticipante();
+            if (!token) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            const form = document.getElementById('form-completar');
+            const msg = document.getElementById('form-mensagem');
+            const btn = document.getElementById('btn-completar');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                btn.disabled = true;
+                btn.textContent = 'Concluindo...';
+                msg.classList.add('hidden');
+
+                try {
+                    await SorteioAPI.atualizarParticipante(token, {
+                        celular: document.getElementById('celular').value.trim(),
+                        empresa: document.getElementById('empresa').value.trim(),
+                        consentimento: true,
+                    });
+                    window.location.href = './jogos.html';
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = 'Concluir cadastro';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

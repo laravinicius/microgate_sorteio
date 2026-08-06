@@ -26,12 +26,17 @@ if (!in_array($jogo, $jogosValidos, true)) {
 
 $pdo = get_pdo();
 
-$stmt = $pdo->prepare('SELECT id FROM participantes WHERE token = :token');
+$stmt = $pdo->prepare('SELECT id, celular, consentimento_em FROM participantes WHERE token = :token');
 $stmt->execute(['token' => $participanteToken]);
 $participante = $stmt->fetch();
 
 if (!$participante) {
     erro(404, 'Cadastro não encontrado. Refaça o cadastro.');
+}
+
+// Cadastro precisa estar completo (celular + consentimento LGPD) para jogar.
+if ($participante['celular'] === null || $participante['consentimento_em'] === null) {
+    erro(422, 'Complete seu cadastro para jogar.');
 }
 
 // Verifica se o participante já tem número gerado (replay não gera novo número)

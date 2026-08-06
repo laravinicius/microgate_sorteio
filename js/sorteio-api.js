@@ -1,7 +1,7 @@
 // =====================================================================
 // Cliente simples para a API do sorteio (backend PHP + Postgres externo).
 // Guarda o progresso do participante em sessionStorage:
-//   - participante_token: emitido no cadastro/login
+//   - participante_token: emitido no login via Google (google-auth)
 //   - sessao_token / sessao_jogo: emitidos ao iniciar um minigame
 // =====================================================================
 
@@ -25,11 +25,8 @@ const SorteioAPI = (() => {
     }
 
     return {
-        cadastrar(payload) {
-            return post('cadastro.php', payload);
-        },
-        login(payload) {
-            return post('login.php', payload);
+        googleAuth(credential) {
+            return post('google-auth.php', { credential });
         },
         consultarNumero(token) {
             return post('meu-numero.php', { participante_token: token });
@@ -43,8 +40,9 @@ const SorteioAPI = (() => {
         iniciarJogo(participanteToken, jogo) {
             return post('iniciar-jogo.php', { participante_token: participanteToken, jogo });
         },
-        finalizarJogo(sessaoToken, pontuacao, segundosJogados) {
+        finalizarJogo(sessaoToken, pontuacao, segundosJogados, participanteToken) {
             return post('finalizar-jogo.php', {
+                participante_token: participanteToken,
                 sessao_token: sessaoToken,
                 pontuacao,
                 segundos_jogados: segundosJogados,
@@ -52,6 +50,9 @@ const SorteioAPI = (() => {
         },
         listarUsuarios(token) {
             return post('admin-usuarios.php', { participante_token: token });
+        },
+        excluirConta(token) {
+            return post('excluir-conta.php', { participante_token: token });
         },
 
         salvarParticipante(token) {

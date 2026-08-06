@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="./css/output.css">
 <link rel="stylesheet" href="./css/games.css">
 <link rel="stylesheet" href="./css/pprush.css">
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
 <script src="./js/theme.js"></script>
 <script src="./js/fullscreen.js"></script>
 <script src="./js/sorteio-api.js"></script>
@@ -401,7 +401,7 @@
       window.location.href = './perfil.html';
     };
 
-    SorteioAPI.finalizarJogo(sessao.token, pontuacao, segundosJogados)
+    SorteioAPI.finalizarJogo(sessao.token, pontuacao, segundosJogados, SorteioAPI.getParticipante())
       .then((resultado) => {
         if (resultado.admin) {
           numeroEl.textContent = '—';

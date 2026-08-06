@@ -26,8 +26,10 @@ CREATE TABLE IF NOT EXISTS participantes (
     token           UUID NOT NULL DEFAULT gen_random_uuid(),  -- usado pelo front-end como credencial da sessão
     nome_completo   VARCHAR(150) NOT NULL,
     email           VARCHAR(150) NOT NULL,
-    celular         VARCHAR(20)  NOT NULL,
+    celular         VARCHAR(20),                          -- opcional (login via Google não informa telefone)
     empresa         VARCHAR(150),
+    google_sub      VARCHAR(128) UNIQUE,                  -- identificador da conta Google (login exclusivo)
+    consentimento_em TIMESTAMPTZ,                         -- data/hora do aceite da Política de Privacidade (LGPD)
     ip_origem       VARCHAR(45),
     user_agent      VARCHAR(255),
     is_admin        BOOLEAN NOT NULL DEFAULT FALSE,
