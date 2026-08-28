@@ -64,7 +64,7 @@ if ($googleSub === '' || $email === '' || !validar_email($email)) {
 $pdo = get_pdo();
 
 // Consulta base (já com o número da sorte quando existir)
-$colunas = 'SELECT p.id, p.token, p.is_admin, p.celular, p.consentimento_em, p.nome_completo,
+$colunas = 'SELECT p.id, p.token, p.is_admin, p.celular, p.cpf, p.consentimento_em, p.nome_completo,
                    ns.numero AS numero_sorte
             FROM participantes p
             LEFT JOIN numeros_sorte ns ON ns.participante_id = p.id';
@@ -84,7 +84,7 @@ function responder_login(array $p): void
         'is_admin'           => (bool)$p['is_admin'],
         'tem_numero'         => $p['numero_sorte'] !== null,
         'numero_sorte'       => $p['numero_sorte'],
-        'precisa_completar'  => $p['celular'] === null || $p['consentimento_em'] === null,
+        'precisa_completar'  => $p['celular'] === null || $p['cpf'] === null || $p['consentimento_em'] === null,
     ]);
 }
 
@@ -110,7 +110,7 @@ try {
     $stmt = $pdo->prepare(
         'INSERT INTO participantes (nome_completo, email, google_sub, ip_origem, user_agent)
          VALUES (:nome, :email, :sub, :ip, :ua)
-         RETURNING id, token, is_admin, celular, consentimento_em, nome_completo'
+         RETURNING id, token, is_admin, celular, cpf, consentimento_em, nome_completo'
     );
     $stmt->execute([
         'nome'  => $nome,

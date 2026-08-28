@@ -24,10 +24,20 @@
                     <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
                         <h1 class="text-2xl font-bold text-center mb-2">Complete seu cadastro</h1>
                         <p class="text-sm text-gray-400 text-center mb-6">
-                            Para participar do sorteio precisamos de um contato e do seu consentimento.
+                            Para participar do sorteio precisamos dos seus dados e do seu consentimento.
                         </p>
 
                         <form id="form-completar" class="space-y-6">
+                            <div>
+                                <label for="nome" class="block text-sm mb-1">Nome completo *</label>
+                                <input id="nome" name="nome" type="text" required placeholder="João da Silva"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
+                            <div>
+                                <label for="cpf" class="block text-sm mb-1">CPF *</label>
+                                <input id="cpf" name="cpf" type="text" required placeholder="000.000.000-00" maxlength="14"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none">
+                            </div>
                             <div>
                                 <label for="celular" class="block text-sm mb-1">Celular (com DDD) *</label>
                                 <input id="celular" name="celular" type="tel" required placeholder="(41) 99999-8888"
@@ -76,16 +86,70 @@
             const form = document.getElementById('form-completar');
             const msg = document.getElementById('form-mensagem');
             const btn = document.getElementById('btn-completar');
+            const cpfInput = document.getElementById('cpf');
+            const celularInput = document.getElementById('celular');
+
+            // Máscara CPF: 000.000.000-00
+            cpfInput.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                if (val.length > 9) val = val.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                else if (val.length > 6) val = val.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+                else if (val.length > 3) val = val.replace(/(\d{3})(\d{3})/, '$1.$2');
+                e.target.value = val;
+            });
+
+            // Máscara celular: (DD) 99999-9999
+            celularInput.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                if (val.length > 10) val = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                else if (val.length > 6) val = val.replace(/(\d{2})(\d{5})/, '($1) $2');
+                else if (val.length > 2) val = val.replace(/(\d{2})/, '($1) ');
+                e.target.value = val;
+            });
+
+            // Validação CPF (dígitos verificadores)
+            function validarCPF(cpf) {
+                cpf = cpf.replace(/\D/g, '');
+                if (cpf.length !== 11) return false;
+                if (/^(\d)\1{10}$/.test(cpf)) return false;
+                for (let t = 9; t < 11; t++) {
+                    let soma = 0;
+                    for (let i = 0; i < t; i++) {
+                        soma += parseInt(cpf[i]) * ((t + 1) - i);
+                    }
+                    let digito = (soma * 10) % 11;
+                    if (digito === 10) digito = 0;
+                    if (parseInt(cpf[t]) !== digito) return false;
+                }
+                return true;
+            }
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const cpfVal = cpfInput.value.replace(/\D/g, '');
+                if (!validarCPF(cpfVal)) {
+                    msg.textContent = 'CPF inválido.';
+                    msg.classList.remove('hidden');
+                    cpfInput.focus();
+                    return;
+                }
+                const celularVal = celularInput.value.replace(/\D/g, '');
+                if (celularVal.length < 10) {
+                    msg.textContent = 'Informe um celular válido com DDD.';
+                    msg.classList.remove('hidden');
+                    celularInput.focus();
+                    return;
+                }
+
                 btn.disabled = true;
                 btn.textContent = 'Concluindo...';
                 msg.classList.add('hidden');
 
                 try {
                     await SorteioAPI.atualizarParticipante(token, {
-                        celular: document.getElementById('celular').value.trim(),
+                        nome: document.getElementById('nome').value.trim(),
+                        cpf: cpfVal,
+                        celular: celularVal,
                         empresa: document.getElementById('empresa').value.trim(),
                         consentimento: true,
                     });

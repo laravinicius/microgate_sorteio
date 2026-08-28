@@ -28,7 +28,7 @@ if (!$participante['is_admin']) {
 }
 
 $stmt = $pdo->query(
-    'SELECT p.id, p.token, p.nome_completo, p.email, p.celular, p.empresa,
+    'SELECT p.id, p.token, p.nome_completo, p.email, p.celular, p.cpf, p.empresa,
             p.ip_origem, p.user_agent, p.is_admin, p.criado_em,
             ns.numero AS numero_sorte, ns.jogo, ns.pontuacao, ns.gerado_em
      FROM participantes p

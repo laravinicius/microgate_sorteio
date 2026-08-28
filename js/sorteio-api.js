@@ -28,6 +28,12 @@ const SorteioAPI = (() => {
         googleAuth(credential) {
             return post('google-auth.php', { credential });
         },
+        enviarCodigo(email) {
+            return post('enviar-codigo.php', { email });
+        },
+        verificarCodigo(email, codigo) {
+            return post('verificar-codigo.php', { email, codigo });
+        },
         consultarNumero(token) {
             return post('meu-numero.php', { participante_token: token });
         },

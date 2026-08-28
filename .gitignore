@@ -5,6 +5,9 @@ backend/config/database.*.php
 backend/config/google.php
 backend/config/google.*.php
 !backend/config/google.example.php
+backend/config/email.php
+backend/config/email.*.php
+!backend/config/email.example.php
 .env
 .env.*
 !.env.example

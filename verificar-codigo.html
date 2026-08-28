@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifique seu e-mail | Microgate Informática</title>
+    <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/output.css">
+    <script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/components.js" defer></script>
+    <script src="./js/sorteio-api.js" defer></script>
+</head>
+
+<body class="bg-brand-dark text-brand-light dark:text-brand-light">
+    <div class="boxed-layout">
+        <div class="content-wrapper min-h-screen">
+            <div class="pb-8" id="header-placeholder"></div>
+
+            <main class="pb-20 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
+                        <h1 class="text-2xl font-bold text-center mb-2">Verifique seu e-mail</h1>
+                        <p class="text-sm text-gray-400 text-center mb-6">
+                            Enviamos um código de 6 dígitos para <strong id="email-exibicao"></strong>.
+                        </p>
+
+                        <form id="form-codigo" class="space-y-6">
+                            <div class="flex gap-3 justify-center" id="codigo-inputs">
+                                <!-- 6 inputs serão criados via JS -->
+                            </div>
+                            <input type="hidden" id="codigo-hidden" name="codigo" value="">
+
+                            <div id="form-mensagem" class="text-sm text-red-400 text-center hidden"></div>
+
+                            <button type="submit" id="btn-verificar"
+                                class="w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                Verificar código
+                            </button>
+                        </form>
+
+                        <div class="mt-6 text-center">
+                            <p class="text-sm text-gray-400">
+                                Não recebeu? 
+                                <button type="button" id="btn-reenviar" class="underline hover:text-white transition text-green-400 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    Reenviar código (<span id="contador">60</span>s)
+                                </button>
+                            </p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <a href="./index.html" class="underline hover:text-white transition">← Voltar para login</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            const emailDisplay = document.getElementById('email-exibicao');
+            const form = document.getElementById('form-codigo');
+            const msg = document.getElementById('form-mensagem');
+            const btnVerificar = document.getElementById('btn-verificar');
+            const btnReenviar = document.getElementById('btn-reenviar');
+            const contadorEl = document.getElementById('contador');
+            const codigoInputs = document.getElementById('codigo-inputs');
+            const codigoHidden = document.getElementById('codigo-hidden');
+
+            if (!email) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            emailDisplay.textContent = email;
+
+            // Cria 6 inputs para o código
+            for (let i = 0; i < 6; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.inputMode = 'numeric';
+                input.pattern = '[0-9]';
+                input.className = 'w-10 h-12 text-center text-lg font-bold rounded-lg bg-metallic-dark border border-white/10 focus:outline-none focus:border-green-500';
+                input.dataset.index = i;
+                input.addEventListener('input', (e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val;
+                    if (val && i < 5) {
+                        codigoInputs.children[i + 1].focus();
+                    }
+                    atualizarHidden();
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && i > 0) {
+                        codigoInputs.children[i - 1].focus();
+                    }
+                });
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+                    pasted.split('').forEach((ch, idx) => {
+                        if (i + idx < 6) codigoInputs.children[i + idx].value = ch;
+                    });
+                    atualizarHidden();
+                    const lastFilled = Math.min(5, i + pasted.length - 1);
+                    if (lastFilled < 5) codigoInputs.children[lastFilled + 1].focus();
+                    else codigoInputs.children[5].blur();
+                });
+                codigoInputs.appendChild(input);
+            }
+
+            function atualizarHidden() {
+                let codigo = '';
+                for (const input of codigoInputs.children) {
+                    codigo += input.value;
+                }
+                codigoHidden.value = codigo;
+            }
+
+            // Contador de reenvio
+            let tempoRestante = 60;
+            let intervalId = null;
+            function iniciarContador() {
+                tempoRestante = 60;
+                btnReenviar.disabled = true;
+                contadorEl.textContent = tempoRestante;
+                intervalId = setInterval(() => {
+                    tempoRestante--;
+                    contadorEl.textContent = tempoRestante;
+                    if (tempoRestante <= 0) {
+                        clearInterval(intervalId);
+                        btnReenviar.disabled = false;
+                        contadorEl.textContent = '60';
+                    }
+                }, 1000);
+            }
+            iniciarContador();
+
+            btnReenviar.addEventListener('click', async () => {
+                btnReenviar.disabled = true;
+                btnReenviar.textContent = 'Enviando...';
+                msg.classList.add('hidden');
+                try {
+                    await SorteioAPI.enviarCodigo(email);
+                    msg.textContent = 'Novo código enviado!';
+                    msg.classList.remove('hidden');
+                    msg.classList.remove('text-red-400');
+                    msg.classList.add('text-green-400');
+                    iniciarContador();
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.classList.remove('hidden');
+                    msg.classList.remove('text-green-400');
+                    msg.classList.add('text-red-400');
+                    btnReenviar.disabled = false;
+                }
+                btnReenviar.textContent = 'Reenviar código';
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const codigo = codigoHidden.value;
+                if (codigo.length !== 6) {
+                    msg.textContent = 'Digite os 6 dígitos do código.';
+                    msg.classList.remove('hidden');
+                    return;
+                }
+                btnVerificar.disabled = true;
+                btnVerificar.textContent = 'Verificando...';
+                msg.classList.add('hidden');
+                try {
+                    const resultado = await SorteioAPI.verificarCodigo(email, codigo);
+                    SorteioAPI.salvarParticipante(resultado.participante_token);
+                    SorteioAPI.salvarAdmin(resultado.is_admin === true);
+
+                    if (resultado.precisa_completar) {
+                        window.location.href = './completar.html';
+                    } else if (resultado.tem_numero) {
+                        window.location.href = './perfil.html';
+                    } else {
+                        window.location.href = './jogos.html';
+                    }
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.classList.remove('hidden');
+                    btnVerificar.disabled = false;
+                    btnVerificar.textContent = 'Verificar código';
+                }
+            });
+
+            // Foca no primeiro input
+            codigoInputs.children[0].focus();
+        });
+    </script>
+</body>
+
+</html>

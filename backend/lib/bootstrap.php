@@ -130,3 +130,43 @@ function exigir_admin(): array
     }
     return $participante;
 }
+
+// Configuração de e-mail (SMTP). Requer backend/config/email.php.
+function get_email_config(): array
+{
+    static $cfg = null;
+    if ($cfg === null) {
+        $cfg = require __DIR__ . '/../config/email.php';
+    }
+    return $cfg;
+}
+
+// Valida CPF brasileiro (algoritmo dos dígitos verificadores).
+function validar_cpf(string $cpf): bool
+{
+    $cpf = preg_replace('/\D/', '', $cpf);
+    if (strlen($cpf) !== 11) {
+        return false;
+    }
+    if (preg_match('/^(\d)\1{10}$/', $cpf)) {
+        return false;
+    }
+    for ($t = 9; $t < 11; $t++) {
+        $soma = 0;
+        for ($i = 0; $i < $t; $i++) {
+            $soma += (int)$cpf[$i] * (($t + 1) - $i);
+        }
+        $digito = ($soma * 10) % 11;
+        if ($digito === 10) $digito = 0;
+        if ((int)$cpf[$t] !== $digito) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Normaliza CPF para apenas 11 dígitos.
+function normalizar_cpf(string $cpf): string
+{
+    return preg_replace('/\D/', '', $cpf) ?? '';
+}

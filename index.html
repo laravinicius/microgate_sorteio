@@ -7,7 +7,6 @@
     <title>Sorteio | Microgate Informática</title>
     <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/style.css">
-
     <link rel="stylesheet" href="./css/output.css">
     <link rel="stylesheet" href="./css/index.css">
     <script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
@@ -16,7 +15,6 @@
     <script src="./js/sorteio-api.js" defer></script>
     <script src="./js/google-config.js" defer></script>
     <script src="./js/google-auth.js" defer></script>
-
 </head>
 
 <body class="bg-brand-dark text-brand-light dark:text-brand-light">
@@ -29,16 +27,38 @@
                     <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
                         <h1 class="text-2xl font-bold text-center mb-2">Participe do Sorteio</h1>
                         <p class="text-sm text-gray-400 text-center mb-6">
-                            Entre com sua conta Google, jogue um minigame rápido (até 2 min) e receba seu número da
-                            sorte.
+                            Jogue um minigame rápido (até 2 min) e receba seu número da sorte.
                         </p>
 
                         <div id="google-button" class="w-full flex justify-center mb-4"></div>
 
                         <div id="google-mensagem" class="text-sm text-red-400 text-center hidden"></div>
 
+                        <div class="relative my-6">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-white/10"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-4 bg-brand-dark text-gray-500">ou</span>
+                            </div>
+                        </div>
+
+                        <div id="email-login" class="space-y-4">
+                            <div>
+                                <label for="email-login-input" class="block text-sm mb-1">E-mail</label>
+                                <input id="email-login-input" type="email" autocomplete="email" placeholder="seu@email.com"
+                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-green-500">
+                            </div>
+                            <button type="button" id="btn-enviar-codigo"
+                                class="w-full font-semibold text-sm rounded-lg py-3 bg-blue-600 text-white hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                <i data-lucide="mail" class="w-4 h-4"></i>
+                                Enviar código por e-mail
+                            </button>
+                            <div id="email-mensagem" class="text-sm text-red-400 text-center hidden"></div>
+                        </div>
+
                         <p class="text-xs text-gray-500 text-center mt-6">
-                            Ao entrar com o Google, você declara ter lido e concordado com a
+                            Ao participar, você declara ter lido e concordado com a
                             <a href="./privacidade.html" class="underline hover:text-white transition">Política de
                                 Privacidade</a>.
                         </p>
@@ -49,6 +69,40 @@
             <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnEnviar = document.getElementById('btn-enviar-codigo');
+            const emailInput = document.getElementById('email-login-input');
+            const msg = document.getElementById('email-mensagem');
+            const googleMsg = document.getElementById('google-mensagem');
+
+            btnEnviar.addEventListener('click', async () => {
+                const email = emailInput.value.trim().toLowerCase();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    msg.textContent = 'Informe um e-mail válido.';
+                    msg.classList.remove('hidden');
+                    return;
+                }
+                btnEnviar.disabled = true;
+                btnEnviar.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Enviando...';
+                if (window.lucide) window.lucide.createIcons();
+                msg.classList.add('hidden');
+                googleMsg.classList.add('hidden');
+
+                try {
+                    await SorteioAPI.enviarCodigo(email);
+                    window.location.href = `./verificar-codigo.html?email=${encodeURIComponent(email)}`;
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.classList.remove('hidden');
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerHTML = '<i data-lucide="mail" class="w-4 h-4"></i> Enviar código por e-mail';
+                    if (window.lucide) window.lucide.createIcons();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
