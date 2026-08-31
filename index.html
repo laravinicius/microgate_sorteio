@@ -20,18 +20,23 @@
 <body class="bg-brand-dark text-brand-light dark:text-brand-light">
     <div class="boxed-layout">
         <div class="content-wrapper min-h-screen">
-            <div class="pb-8" id="header-placeholder"></div>
+            <div class="pb-6" id="header-placeholder"></div>
 
-            <main class="pb-20 px-4">
+            <main class="pb-20 px-4 sm:px-6">
                 <div class="max-w-7xl mx-auto">
-                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
-                        <h1 class="text-2xl font-bold text-center mb-2">Participe do Sorteio</h1>
-                        <p class="text-sm text-gray-400 text-center mb-6">
-                            Jogue um minigame rápido (até 2 min) e receba seu número da sorte.
-                        </p>
+                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-6 sm:p-8">
+                        <div class="text-center mb-6">
+                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#ffb020] font-semibold mb-3">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#ffb020]"></span>
+                                Sorteio Microgate
+                            </div>
+                            <h1 class="text-2xl font-bold mb-2">Participe do Sorteio</h1>
+                            <p class="text-sm text-gray-400">
+                                Jogue um minigame rápido (até 2 min) e receba seu número da sorte.
+                            </p>
+                        </div>
 
                         <div id="google-button" class="w-full flex justify-center mb-4"></div>
-
                         <div id="google-mensagem" class="text-sm text-red-400 text-center hidden"></div>
 
                         <div class="relative my-6">
@@ -39,25 +44,25 @@
                                 <div class="w-full border-t border-white/10"></div>
                             </div>
                             <div class="relative flex justify-center text-sm">
-                                <span class="px-4 bg-brand-dark text-gray-500">ou</span>
+                                <span class="px-4 bg-brand-dark text-gray-500 text-xs uppercase tracking-wider">ou</span>
                             </div>
                         </div>
 
                         <div id="email-login" class="space-y-4">
                             <div>
-                                <label for="email-login-input" class="block text-sm mb-1">E-mail</label>
+                                <label for="email-login-input" class="block text-sm mb-1.5 text-gray-300">E-mail</label>
                                 <input id="email-login-input" type="email" autocomplete="email" placeholder="seu@email.com"
-                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-green-500">
+                                    class="input-tech">
                             </div>
                             <button type="button" id="btn-enviar-codigo"
-                                class="w-full font-semibold text-sm rounded-lg py-3 bg-blue-600 text-white hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                class="btn-tech btn-tech-primary btn-tech-full">
                                 <i data-lucide="mail" class="w-4 h-4"></i>
                                 Enviar código por e-mail
                             </button>
                             <div id="email-mensagem" class="text-sm text-red-400 text-center hidden"></div>
                         </div>
 
-                        <p class="text-xs text-gray-500 text-center mt-6">
+                        <p class="text-xs text-gray-500 text-center mt-6 leading-relaxed">
                             Ao participar, você declara ter lido e concordado com a
                             <a href="./privacidade.html" class="underline hover:text-white transition">Política de
                                 Privacidade</a>.
@@ -66,7 +71,7 @@
                 </div>
             </main>
 
-            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+            <footer id="footer-placeholder" class="footer-tech"></footer>
         </div>
     </div>
 

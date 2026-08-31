@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/output.css">
+    <link rel="stylesheet" href="./css/index.css">
     <script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
     <script src="./js/theme.js"></script>
     <script src="./js/components.js" defer></script>
@@ -17,18 +18,24 @@
 <body class="bg-brand-dark text-brand-light dark:text-brand-light">
     <div class="boxed-layout">
         <div class="content-wrapper min-h-screen">
-            <div class="pb-8" id="header-placeholder"></div>
+            <div class="pb-6" id="header-placeholder"></div>
 
-            <main class="pb-20 px-4">
+            <main class="pb-20 px-4 sm:px-6">
                 <div class="max-w-7xl mx-auto">
-                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-8">
-                        <h1 class="text-2xl font-bold text-center mb-2">Verifique seu e-mail</h1>
-                        <p class="text-sm text-gray-400 text-center mb-6">
-                            Enviamos um código de 6 dígitos para <strong id="email-exibicao"></strong>.
-                        </p>
+                    <div class="max-w-md mx-auto bg-brand-dark border border-white/10 rounded-2xl p-6 sm:p-8">
+                        <div class="text-center mb-6">
+                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#ffb020] font-semibold mb-3">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#ffb020]"></span>
+                                Verificação por E-mail
+                            </div>
+                            <h1 class="text-2xl font-bold mb-2">Verifique seu e-mail</h1>
+                            <p class="text-sm text-gray-400">
+                                Enviamos um código de 6 dígitos para <strong id="email-exibicao"></strong>.
+                            </p>
+                        </div>
 
                         <form id="form-codigo" class="space-y-6">
-                            <div class="flex gap-3 justify-center" id="codigo-inputs">
+                            <div class="flex gap-2 sm:gap-3 justify-center" id="codigo-inputs">
                                 <!-- 6 inputs serão criados via JS -->
                             </div>
                             <input type="hidden" id="codigo-hidden" name="codigo" value="">
@@ -36,7 +43,7 @@
                             <div id="form-mensagem" class="text-sm text-red-400 text-center hidden"></div>
 
                             <button type="submit" id="btn-verificar"
-                                class="w-full font-semibold text-sm rounded-lg py-3 bg-green-600 text-white hover:bg-green-700 transition">
+                                class="btn-tech btn-tech-primary btn-tech-full">
                                 Verificar código
                             </button>
                         </form>
@@ -56,7 +63,7 @@
                 </div>
             </main>
 
-            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+            <footer id="footer-placeholder" class="footer-tech"></footer>
         </div>
     </div>
 
@@ -87,7 +94,7 @@
                 input.maxLength = 1;
                 input.inputMode = 'numeric';
                 input.pattern = '[0-9]';
-                input.className = 'w-10 h-12 text-center text-lg font-bold rounded-lg bg-metallic-dark border border-white/10 focus:outline-none focus:border-green-500';
+                input.className = 'w-10 h-12 sm:w-11 text-center text-lg font-bold rounded-lg bg-metallic-dark border border-white/10 focus:outline-none focus:border-[#5cc0ff] font-mono';
                 input.dataset.index = i;
                 input.addEventListener('input', (e) => {
                     const val = e.target.value.replace(/\D/g, '');

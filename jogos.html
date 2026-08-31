@@ -19,36 +19,51 @@
 <body class="bg-brand-dark text-brand-light">
     <div class="boxed-layout">
         <div class="content-wrapper min-h-screen">
-            <div class="pb-8" id="header-placeholder"></div>
+            <div class="pb-6" id="header-placeholder"></div>
 
-            <main class="pb-20 px-4">
+            <main class="pb-20 px-4 sm:px-6">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h1 class="text-2xl font-bold mb-2">Escolha seu minigame</h1>
+                    <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#ffb020] font-semibold mb-3">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#ffb020]"></span>
+                        Modo Minigame
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold mb-2">Escolha seu minigame</h1>
                     <p class="text-sm text-gray-400 mb-8">Você tem até 2 minutos. Ao concluir, seu número da sorte é
                         gerado na hora.</p>
 
                     <div id="mensagem-bloqueio" class="hidden mb-6 text-sm text-amber-400"></div>
 
-                    <div class="grid sm:grid-cols-2 gap-6">
+                    <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
                         <button data-jogo="firewall_defense"
-                            class="card-jogo bg-brand-dark border border-white/10 rounded-2xl p-6 text-left">
-                            <h2 class="text-lg font-semibold mb-1">🛡️ Firewall Defense</h2>
-                            <p class="text-sm text-gray-400">Bloqueie o tráfego malicioso antes que ele chegue ao
-                                datacenter.</p>
+                            class="card-jogo rounded-2xl p-5 sm:p-6 text-left">
+                            <span class="badge-jogo text-red-400 border border-red-500/30 bg-red-500/10">
+                                <i data-lucide="shield" class="w-3.5 h-3.5"></i> Bloqueio
+                            </span>
+                            <h2 class="text-lg font-semibold mb-1.5">🛡️ Firewall Defense</h2>
+                            <p class="desc">Bloqueie o tráfego malicioso antes que ele chegue ao datacenter.</p>
+                            <div class="meta-status">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#3ddc84] animate-pulse"></span>
+                                <span>Duração: 60 segundos</span>
+                            </div>
                         </button>
 
                         <button data-jogo="patch_panel_rush"
-                            class="card-jogo bg-brand-dark border border-white/10 rounded-2xl p-6 text-left">
-                            <h2 class="text-lg font-semibold mb-1">🔌 Patch Panel Rush</h2>
-                            <p class="text-sm text-gray-400">Conecte os cabos certos no patch panel o mais rápido
-                                possível.</p>
+                            class="card-jogo rounded-2xl p-5 sm:p-6 text-left">
+                            <span class="badge-jogo text-blue-400 border border-blue-500/30 bg-blue-500/10">
+                                <i data-lucide="cable" class="w-3.5 h-3.5"></i> Cabeamento
+                            </span>
+                            <h2 class="text-lg font-semibold mb-1.5">🔌 Patch Panel Rush</h2>
+                            <p class="desc">Conecte os cabos certos no patch panel o mais rápido possível.</p>
+                            <div class="meta-status">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#5cc0ff] animate-pulse"></span>
+                                <span>3 rodadas · tempo crescente</span>
+                            </div>
                         </button>
                     </div>
                 </div>
             </main>
 
-            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10">
-            </footer>
+            <footer id="footer-placeholder" class="footer-tech"></footer>
         </div>
     </div>
 

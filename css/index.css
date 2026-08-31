@@ -1,9 +1,10 @@
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     transition: background-color 0.3s ease;
 }
 
 #form-cadastro input:focus {
-    border-color: rgba(255, 255, 255, .35);
+    border-color: var(--led-blue);
     background-color: #161616;
+    box-shadow: 0 0 0 3px rgba(92, 192, 255, 0.12);
 }

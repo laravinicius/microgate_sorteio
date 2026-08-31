@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="./img/ico.ico" type="image/x-icon">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/output.css">
+    <link rel="stylesheet" href="./css/index.css">
     <script src="https://unpkg.com/lucide@1.29.0/dist/umd/lucide.min.js" integrity="sha384-wyD7qHuL36bnPiQFkqRuq46WXCrlyGbI5w/mvqgTcJ/NwMFSXCr1f+DpJoCqeLRY" crossorigin="anonymous"></script>
     <script src="./js/theme.js"></script>
     <script src="./js/components.js" defer></script>
@@ -17,33 +18,39 @@
 <body class="bg-brand-dark text-brand-light dark:text-brand-light">
     <div class="boxed-layout">
         <div class="content-wrapper min-h-screen">
-            <div class="pb-8" id="header-placeholder"></div>
+            <div class="pb-6" id="header-placeholder"></div>
 
-            <main class="pb-20 px-4">
+            <main class="pb-20 px-4 sm:px-6">
                 <div class="max-w-7xl mx-auto">
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                         <div>
+                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#ffb020] font-semibold mb-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#ffb020]"></span>
+                                Painel de Controle
+                            </div>
                             <h1 class="text-2xl font-bold mb-1">Administração</h1>
                             <p id="admin-sub" class="text-sm text-gray-400">Carregando usuários...</p>
                         </div>
                         <div class="flex gap-3">
                             <button id="admin-btn-exportar"
-                                class="hidden font-semibold text-sm rounded-lg py-2 px-4 bg-green-600 text-white hover:bg-green-700 transition">
+                                class="btn-tech btn-tech-primary hidden">
+                                <i data-lucide="download" class="w-4 h-4"></i>
                                 Exportar CSV
                             </button>
                             <a href="./perfil.html"
-                                class="font-semibold text-sm rounded-lg py-2 px-4 border border-white/10 text-white hover:bg-white/5 transition">
+                                class="btn-tech btn-tech-secondary">
+                                <i data-lucide="user" class="w-4 h-4"></i>
                                 Meu Perfil
                             </a>
                         </div>
                     </div>
 
-                    <div class="bg-brand-dark border border-white/10 rounded-2xl p-6">
+                    <div class="bg-brand-dark border border-white/10 rounded-2xl p-4 sm:p-6">
                         <div class="flex flex-wrap items-center gap-3 mb-4">
                             <div class="relative flex-1 min-w-[240px]">
                                 <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
                                 <input id="admin-busca" type="text" placeholder="Buscar por nome, e-mail, celular ou empresa..."
-                                    class="w-full rounded-lg bg-metallic-dark border border-white/10 pl-10 pr-3 py-2 text-sm focus:outline-none">
+                                    class="input-tech pl-10">
                             </div>
                             <span id="admin-contador" class="text-sm text-gray-400"></span>
                         </div>
@@ -51,7 +58,7 @@
                         <div id="admin-carregando" class="text-sm text-gray-400 py-8 text-center">Carregando...</div>
                         <div id="admin-erro" class="hidden text-sm text-red-400 py-8 text-center"></div>
 
-                        <div id="admin-tabela-wrap" class="hidden overflow-x-auto">
+                        <div id="admin-tabela-wrap" class="hidden overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="text-left text-gray-400 border-b border-white/10">
@@ -73,7 +80,7 @@
                 </div>
             </main>
 
-            <footer id="footer-placeholder" class="py-16 bg-brand-dark text-gray-400 border-t border-white/10"></footer>
+            <footer id="footer-placeholder" class="footer-tech"></footer>
         </div>
     </div>
 

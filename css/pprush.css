@@ -10,7 +10,7 @@
   z-index: 20;
   gap: 14px;
 }
-.title { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--text); }
+.title { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--text); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
 
 #board {
   position: relative;
@@ -44,6 +44,7 @@
   padding-bottom: 6px;
   margin-bottom: 4px;
   border-bottom: 1px dashed var(--line);
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .ports { display: flex; flex-direction: column; justify-content: space-evenly; flex: 1; gap: 4px; padding: 2px 8px; }
@@ -82,6 +83,7 @@
 .port-label {
   font-size: 12px; font-weight: 600; color: var(--text-dim);
   font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
 }
 .port.connected .port-label { color: var(--text); }
 
@@ -92,5 +94,12 @@
   font-size: 11.5px;
   color: var(--text-dim);
   min-height: 34px;
+  font-family: 'JetBrains Mono', monospace;
 }
 #status .accent { color: var(--led-green); }
+
+@media (max-width: 640px) {
+  .rack-panel { width: 96px; }
+  .port { height: 32px; padding: 0 6px; }
+  .port-label { font-size: 11px; }
+}
