@@ -42,74 +42,90 @@ function enviarEmail(string $to, string $subject, string $htmlBody, string $text
 
     $target = ($useSsl ? 'ssl://' : 'tcp://') . $host . ':' . $port;
 
-    $socket = @stream_socket_client($target, $errno, $errstr, 10, STREAM_CLIENT_CONNECT);
-    if (!$socket) {
-        error_log('[sorteio] SMTP conexão falhou: ' . $errstr . ' (' . $errno . ')');
-        return false;
-    }
+    // Retry com backoff exponencial: máx 3 tentativas (1s, 2s, 4s)
+    $maxTentativas = 3;
+    $baseDelay = 1; // segundos
 
-    stream_set_timeout($socket, 10);
-
-    try {
-        // Banner
-        $banner = smtp_read($socket);
-        if (!str_starts_with(trim($banner), '220')) {
-            throw new RuntimeException('SMTP banner inesperado: ' . trim($banner));
+    for ($tentativa = 1; $tentativa <= $maxTentativas; $tentativa++) {
+        $socket = @stream_socket_client($target, $errno, $errstr, 10, STREAM_CLIENT_CONNECT);
+        if (!$socket) {
+            error_log('[sorteio] SMTP conexão falhou (tentativa ' . $tentativa . '/' . $maxTentativas . '): ' . $errstr . ' (' . $errno . ')');
+            if ($tentativa < $maxTentativas) {
+                sleep($baseDelay * (1 << ($tentativa - 1))); // 1, 2, 4...
+                continue;
+            }
+            return false;
         }
 
-        $hostname = gethostname() ?: 'localhost';
-        smtp_send($socket, "EHLO {$hostname}", '250');
+        stream_set_timeout($socket, 10);
 
-        // AUTH LOGIN
-        smtp_send($socket, 'AUTH LOGIN', '334');
-        smtp_send($socket, base64_encode($user), '334');
-        smtp_send($socket, base64_encode($pass), '235');
+        try {
+            // Banner
+            $banner = smtp_read($socket);
+            if (!str_starts_with(trim($banner), '220')) {
+                throw new RuntimeException('SMTP banner inesperado: ' . trim($banner));
+            }
 
-        // MAIL FROM - usa o usuário autenticado
-        smtp_send($socket, "MAIL FROM:<{$user}>", '250');
+            $hostname = gethostname() ?: 'localhost';
+            smtp_send($socket, "EHLO {$hostname}", '250');
 
-        // RCPT TO
-        smtp_send($socket, "RCPT TO:<{$to}>", '250');
+            // AUTH LOGIN
+            smtp_send($socket, 'AUTH LOGIN', '334');
+            smtp_send($socket, base64_encode($user), '334');
+            smtp_send($socket, base64_encode($pass), '235');
 
-        // DATA
-        smtp_send($socket, 'DATA', '354');
+            // MAIL FROM - usa o usuário autenticado
+            smtp_send($socket, "MAIL FROM:<{$user}>", '250');
 
-        $date = date('r');
-        $messageId = '<' . bin2hex(random_bytes(8)) . '.' . time() . '@' . parse_url($fromEmail, PHP_URL_HOST) . '>';
+            // RCPT TO
+            smtp_send($socket, "RCPT TO:<{$to}>", '250');
 
-        // Envia apenas text/plain (mais compatível, evita problemas de multipart)
-        $textEncoded = quoted_printable_encode($textBody);
+            // DATA
+            smtp_send($socket, 'DATA', '354');
 
-        $headers = [
-            "Date: {$date}",
-            "From: {$fromName} <{$fromEmail}>",
-            "Reply-To: {$fromEmail}",
-            "To: <{$to}>",
-            "Subject: {$subject}",
-            "Message-ID: {$messageId}",
-            "MIME-Version: 1.0",
-            "Precedence: bulk",
-            "X-Priority: 3",
-            "Content-Type: text/plain; charset=UTF-8",
-            "Content-Transfer-Encoding: quoted-printable",
-            "",
-        ];
+            $date = date('r');
+            $messageId = '<' . bin2hex(random_bytes(8)) . '.' . time() . '@' . parse_url($fromEmail, PHP_URL_HOST) . '>';
 
-        $data = implode("\r\n", $headers) . "\r\n" . $textEncoded . "\r\n.\r\n";
-        fwrite($socket, $data);
-        $resp = smtp_read($socket);
-        if (!str_starts_with(trim($resp), '250')) {
-            throw new RuntimeException('SMTP DATA falhou: ' . trim($resp));
+            // Envia apenas text/plain (mais compatível, evita problemas de multipart)
+            $textEncoded = quoted_printable_encode($textBody);
+
+            $headers = [
+                "Date: {$date}",
+                "From: {$fromName} <{$fromEmail}>",
+                "Reply-To: {$fromEmail}",
+                "To: <{$to}>",
+                "Subject: {$subject}",
+                "Message-ID: {$messageId}",
+                "MIME-Version: 1.0",
+                "Precedence: bulk",
+                "X-Priority: 3",
+                "Content-Type: text/plain; charset=UTF-8",
+                "Content-Transfer-Encoding: quoted-printable",
+                "",
+            ];
+
+            $data = implode("\r\n", $headers) . "\r\n" . $textEncoded . "\r\n.\r\n";
+            fwrite($socket, $data);
+            $resp = smtp_read($socket);
+            if (!str_starts_with(trim($resp), '250')) {
+                throw new RuntimeException('SMTP DATA falhou: ' . trim($resp));
+            }
+
+            // QUIT
+            smtp_send($socket, 'QUIT', '221');
+
+            fclose($socket);
+            return true;
+        } catch (Throwable $e) {
+            error_log('[sorteio] SMTP erro (tentativa ' . $tentativa . '/' . $maxTentativas . '): ' . $e->getMessage());
+            @fclose($socket);
+            if ($tentativa < $maxTentativas) {
+                sleep($baseDelay * (1 << ($tentativa - 1))); // 1, 2, 4...
+                continue;
+            }
+            return false;
         }
-
-        // QUIT
-        smtp_send($socket, 'QUIT', '221');
-
-        fclose($socket);
-        return true;
-    } catch (Throwable $e) {
-        error_log('[sorteio] SMTP erro: ' . $e->getMessage());
-        @fclose($socket);
-        return false;
     }
+
+    return false;
 }

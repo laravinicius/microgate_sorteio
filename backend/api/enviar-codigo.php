@@ -31,6 +31,11 @@ if ($ultimo && strtotime($ultimo['criado_em']) > time() - 60) {
     erro(429, 'Aguarde um minuto antes de solicitar novo código.');
 }
 
+verificar_rate_limit('enviar-codigo', 3, 60);
+
+// Rate limit diário: máx 20 e-mails por IP por dia (proteção SMTP reputation)
+verificar_rate_limit('email-daily', 20, 86400);
+
 // Gera código de 6 dígitos
 $codigo = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 $expiraEm = date('c', time() + 600); // 10 minutos

@@ -35,6 +35,8 @@ if ($pontuacao < 0 || $pontuacao > 50000) {
     erro(422, 'Pontuação inválida.');
 }
 
+verificar_rate_limit('finalizar-jogo', 10, 60);
+
 $pdo = get_pdo();
 
 // Confirma o participante dono da sessão antes de prosseguir.

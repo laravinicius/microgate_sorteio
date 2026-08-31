@@ -79,6 +79,22 @@ CREATE TABLE IF NOT EXISTS numeros_sorte (
 CREATE INDEX IF NOT EXISTS idx_numeros_sorte_numero ON numeros_sorte (numero);
 
 -- ---------------------------------------------------------------------
+-- Tabela: rate_limits
+-- Controle de rate limiting por IP + endpoint.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id              BIGSERIAL PRIMARY KEY,
+    ip              VARCHAR(45) NOT NULL,               -- IPv4 ou IPv6
+    endpoint        VARCHAR(50) NOT NULL,               -- ex: 'google-auth', 'enviar-codigo'
+    contador        INT NOT NULL DEFAULT 1,
+    janela_inicio   TIMESTAMPTZ NOT NULL DEFAULT now(), -- início da janela atual
+    CONSTRAINT uq_rate_limits_ip_endpoint UNIQUE (ip, endpoint)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limits_ip_endpoint ON rate_limits (ip, endpoint);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_janela ON rate_limits (janela_inicio);
+
+-- ---------------------------------------------------------------------
 -- View auxiliar para exportar a lista final do sorteio (usar no dia do sorteio)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW vw_lista_sorteio AS

@@ -21,6 +21,8 @@ if ($codigo === '' || !preg_match('/^\d{6}$/', $codigo)) {
     erro(422, 'Código inválido. Informe 6 dígitos.');
 }
 
+verificar_rate_limit('verificar-codigo', 10, 60);
+
 $pdo = get_pdo();
 
 // Busca código válido (não expirado, não usado)

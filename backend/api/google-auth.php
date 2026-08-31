@@ -15,6 +15,8 @@ require __DIR__ . '/../lib/bootstrap.php';
 exigir_post();
 $dados = json_input();
 
+verificar_rate_limit('google-auth', 5, 60);
+
 $credential = trim((string)($dados['credential'] ?? ''));
 if ($credential === '') {
     erro(422, 'Credencial do Google ausente.');

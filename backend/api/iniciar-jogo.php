@@ -24,6 +24,8 @@ if (!in_array($jogo, $jogosValidos, true)) {
     erro(422, 'Jogo inválido.');
 }
 
+verificar_rate_limit('iniciar-jogo', 10, 60);
+
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare('SELECT id, celular, consentimento_em FROM participantes WHERE token = :token');

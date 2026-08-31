@@ -141,6 +141,68 @@ function get_email_config(): array
     return $cfg;
 }
 
+// Obtém o IP do cliente (respeita X-Forwarded-For se behind proxy confiável).
+function get_client_ip(): string
+{
+    $headers = [
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_REAL_IP',
+        'HTTP_CLIENT_IP',
+    ];
+    foreach ($headers as $header) {
+        if (!empty($_SERVER[$header])) {
+            $ips = explode(',', $_SERVER[$header]);
+            return trim($ips[0]);
+        }
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+
+// Rate limiting por IP + endpoint (janela fixa com reset automático).
+// Lança erro(429) se exceder o limite.
+function verificar_rate_limit(string $endpoint, int $maxReq, int $windowSec): void
+{
+    $pdo = get_pdo();
+    $ip = get_client_ip();
+    $now = time();
+
+    // Upsert atômico: insere ou atualiza contador/janela
+    $stmt = $pdo->prepare(
+        'INSERT INTO rate_limits (ip, endpoint, contador, janela_inicio)
+         VALUES (:ip, :endpoint, 1, to_timestamp(:now))
+         ON CONFLICT (ip, endpoint) DO UPDATE SET
+             contador = CASE
+                 WHEN EXTRACT(EPOCH FROM (now() - rate_limits.janela_inicio)) > :window
+                 THEN 1
+                 ELSE rate_limits.contador + 1
+             END,
+             janela_inicio = CASE
+                 WHEN EXTRACT(EPOCH FROM (now() - rate_limits.janela_inicio)) > :window
+                 THEN to_timestamp(:now)
+                 ELSE rate_limits.janela_inicio
+             END
+         RETURNING contador, janela_inicio'
+    );
+    $stmt->execute([
+        'ip'      => $ip,
+        'endpoint' => $endpoint,
+        'now'     => $now,
+        'window'  => $windowSec,
+    ]);
+    $row = $stmt->fetch();
+
+    if ($row && (int)$row['contador'] > $maxReq) {
+        $janelaInicio = strtotime($row['janela_inicio']);
+        $retryAfter = max(1, $janelaInicio + $windowSec - $now);
+        erro(429, 'Muitas requisições. Tente novamente em ' . $retryAfter . ' segundos.', ['retry_after' => $retryAfter]);
+    }
+
+    // Limpeza ocasional (1% das requisições) para evitar crescimento infinito
+    if (random_int(1, 100) === 1) {
+        $pdo->prepare('DELETE FROM rate_limits WHERE janela_inicio < now() - interval \'24 hours\'')->execute();
+    }
+}
+
 // Valida CPF brasileiro (algoritmo dos dígitos verificadores).
 function validar_cpf(string $cpf): bool
 {
