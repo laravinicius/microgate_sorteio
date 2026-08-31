@@ -52,10 +52,27 @@ async function loadComponents() {
     });
 
     // Link "Administração" apenas para administradores
-    const isAdmin = logado && SorteioAPI.getAdmin();
-    document.querySelectorAll('[data-nav-admin]').forEach((el) => {
-        el.classList.toggle('hidden', !isAdmin);
-    });
+    // Verifica no servidor o nível do perfil em vez de confiar em valor possivelmente obsoleto.
+    const aplicarAdmin = (isAdmin) => {
+        document.querySelectorAll('[data-nav-admin]').forEach((el) => {
+            el.classList.toggle('hidden', !isAdmin);
+        });
+    };
+
+    if (logado) {
+        const token = SorteioAPI.getParticipante();
+        SorteioAPI.consultarNumero(token)
+            .then((dados) => {
+                const isAdmin = dados.is_admin === true;
+                SorteioAPI.salvarAdmin(isAdmin);
+                aplicarAdmin(isAdmin);
+            })
+            .catch(() => {
+                aplicarAdmin(SorteioAPI.getAdmin());
+            });
+    } else {
+        aplicarAdmin(false);
+    }
 
     // Logo: logado -> perfil; deslogado -> cadastro/login (index)
     const logoLink = document.getElementById('logo-link');
