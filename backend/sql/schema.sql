@@ -19,27 +19,35 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ---------------------------------------------------------------------
 -- Tabela: participantes
--- Um registro por pessoa cadastrada via formulário inicial.
+-- Um registro por pessoa cadastrada via Google OAuth ou e-mail/CPF.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS participantes (
     id              BIGSERIAL PRIMARY KEY,
-    token           UUID NOT NULL DEFAULT gen_random_uuid(),  -- usado pelo front-end como credencial da sessão
+    token           UUID NOT NULL DEFAULT gen_random_uuid(),
     nome_completo   VARCHAR(150) NOT NULL,
     email           VARCHAR(150) NOT NULL,
-    celular         VARCHAR(20),                          -- opcional (login via Google não informa telefone)
+    cpf             VARCHAR(11),
+    celular         VARCHAR(20),
     empresa         VARCHAR(150),
-    google_sub      VARCHAR(128) UNIQUE,                  -- identificador da conta Google (login exclusivo)
-    consentimento_em TIMESTAMPTZ,                         -- data/hora do aceite da Política de Privacidade (LGPD)
+    google_sub      VARCHAR(128),
+    consentimento_em TIMESTAMPTZ,
     ip_origem       VARCHAR(45),
     user_agent      VARCHAR(255),
     is_admin        BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_participantes_token   UNIQUE (token),
     CONSTRAINT uq_participantes_email   UNIQUE (email),
-    CONSTRAINT uq_participantes_celular UNIQUE (celular)
+    CONSTRAINT uq_participantes_cpf     UNIQUE (cpf),
+    CONSTRAINT uq_participantes_celular UNIQUE (celular),
+    CONSTRAINT uq_participantes_google_sub UNIQUE (google_sub)
 );
 
 CREATE INDEX IF NOT EXISTS idx_participantes_email ON participantes (email);
+
+-- Admin padrão (pode jogar mas não recebe número da sorte)
+INSERT INTO participantes (nome_completo, email, celular, empresa, is_admin)
+VALUES ('Administrador', 'ti@microgateinformatica.com.br', '41991942228', 'Microgate Informática', TRUE)
+ON CONFLICT (email) DO UPDATE SET is_admin = TRUE;
 
 -- ---------------------------------------------------------------------
 -- Tabela: sessoes_jogo
@@ -72,8 +80,8 @@ CREATE TABLE IF NOT EXISTS numeros_sorte (
     numero           VARCHAR(6) NOT NULL,
     pontuacao        INTEGER NOT NULL DEFAULT 0,
     gerado_em        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_numeros_sorte_numero      UNIQUE (numero),        -- garante não repetir no banco
-    CONSTRAINT uq_numeros_sorte_participante UNIQUE (participante_id) -- garante 1 número por pessoa
+    CONSTRAINT uq_numeros_sorte_numero       UNIQUE (numero),
+    CONSTRAINT uq_numeros_sorte_participante UNIQUE (participante_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_numeros_sorte_numero ON numeros_sorte (numero);
@@ -84,10 +92,10 @@ CREATE INDEX IF NOT EXISTS idx_numeros_sorte_numero ON numeros_sorte (numero);
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS rate_limits (
     id              BIGSERIAL PRIMARY KEY,
-    ip              VARCHAR(45) NOT NULL,               -- IPv4 ou IPv6
-    endpoint        VARCHAR(50) NOT NULL,               -- ex: 'google-auth', 'enviar-codigo'
+    ip              VARCHAR(45) NOT NULL,
+    endpoint        VARCHAR(50) NOT NULL,
     contador        INT NOT NULL DEFAULT 1,
-    janela_inicio   TIMESTAMPTZ NOT NULL DEFAULT now(), -- início da janela atual
+    janela_inicio   TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_rate_limits_ip_endpoint UNIQUE (ip, endpoint)
 );
 
@@ -95,7 +103,24 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_ip_endpoint ON rate_limits (ip, endpo
 CREATE INDEX IF NOT EXISTS idx_rate_limits_janela ON rate_limits (janela_inicio);
 
 -- ---------------------------------------------------------------------
--- View auxiliar para exportar a lista final do sorteio (usar no dia do sorteio)
+-- Tabela: codigos_verificacao
+-- Códigos de verificação por e-mail (fluxo não-Google).
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS codigos_verificacao (
+    id              BIGSERIAL PRIMARY KEY,
+    email           VARCHAR(150) NOT NULL,
+    codigo          VARCHAR(6) NOT NULL,
+    expira_em       TIMESTAMPTZ NOT NULL,
+    tentativas      INT NOT NULL DEFAULT 0,
+    usado_em        TIMESTAMPTZ,
+    criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_codigos_email ON codigos_verificacao (email);
+CREATE INDEX IF NOT EXISTS idx_codigos_expira ON codigos_verificacao (expira_em);
+
+-- ---------------------------------------------------------------------
+-- View auxiliar para exportar a lista final do sorteio
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW vw_lista_sorteio AS
 SELECT
