@@ -11,6 +11,8 @@ backend/config/email.*.php
 .env
 .env.*
 !.env.example
+docker-compose.yml
+docker
 
 # --- SO / editor ---
 .DS_Store
@@ -21,6 +23,7 @@ desktop.ini
 *.swp
 *.swo
 *~
+docs
 
 # --- Logs / temporários ---
 *.log
