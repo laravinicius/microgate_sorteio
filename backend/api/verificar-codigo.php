@@ -26,7 +26,9 @@ verificar_rate_limit('verificar-codigo', 10, 60);
 $pdo = get_pdo();
 
 // Bypass: e-mails na whitelist pulam verificação do código (teste local)
-if (!email_is_whitelist($email)) {
+if (email_is_whitelist($email)) {
+    error_log("[sorteio] Whitelist: pulando verificação para: {$email}" . (is_dev_mode() ? ' (DEV_MODE)' : ''));
+} else {
     error_log("[sorteio] Verificando código para: {$email}");
     // Busca código válido (não expirado, não usado)
     $stmt = $pdo->prepare(

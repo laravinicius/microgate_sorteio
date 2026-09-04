@@ -562,6 +562,14 @@ video {
   .container {
     max-width: 640px;
   }
+
+  .sm\:w-10 {
+    width: 2.5rem;
+  }
+
+  .sm\:h-12 {
+    height: 3rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -726,6 +734,10 @@ video {
   height: 2.5rem;
 }
 
+.h-11 {
+  height: 2.75rem;
+}
+
 .h-12 {
   height: 3rem;
 }
@@ -796,6 +808,10 @@ video {
 
 .w-7 {
   width: 1.75rem;
+}
+
+.w-9 {
+  width: 2.25rem;
 }
 
 .w-72 {

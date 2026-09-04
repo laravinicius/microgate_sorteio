@@ -233,6 +233,12 @@ function normalizar_cpf(string $cpf): string
     return preg_replace('/\D/', '', $cpf) ?? '';
 }
 
+// Retorna true quando DEV_MODE=true (variável de ambiente, só em Docker dev).
+function is_dev_mode(): bool
+{
+    return getenv('DEV_MODE') === 'true';
+}
+
 // Lista de e-mails que bypassam verificação por código (teste local).
 // TODO: remover quando não precisar mais.
 function email_is_whitelist(string $email): bool
