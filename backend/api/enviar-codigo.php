@@ -17,6 +17,12 @@ if ($email === '' || !validar_email($email)) {
     erro(422, 'Informe um e-mail válido.');
 }
 
+// Bypass: e-mails na whitelist não precisam de código (teste local)
+if (email_is_whitelist($email)) {
+    error_log("[sorteio] Bypass whitelist ativo para: {$email}");
+    sucesso(['expira_em' => date('c', time() + 600)]);
+}
+
 $pdo = get_pdo();
 
 // Limpa códigos expirados ou usados deste e-mail (manutenção)

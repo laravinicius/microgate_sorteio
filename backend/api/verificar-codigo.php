@@ -25,34 +25,40 @@ verificar_rate_limit('verificar-codigo', 10, 60);
 
 $pdo = get_pdo();
 
-// Busca código válido (não expirado, não usado)
-$stmt = $pdo->prepare(
-    'SELECT id, tentativas FROM codigos_verificacao
-     WHERE email = :email AND codigo = :codigo
-       AND expira_em > now()
-       AND usado_em IS NULL
-     LIMIT 1'
-);
-$stmt->execute(['email' => $email, 'codigo' => $codigo]);
-$cod = $stmt->fetch();
+// Bypass: e-mails na whitelist pulam verificação do código (teste local)
+if (!email_is_whitelist($email)) {
+    error_log("[sorteio] Verificando código para: {$email}");
+    // Busca código válido (não expirado, não usado)
+    $stmt = $pdo->prepare(
+        'SELECT id, tentativas FROM codigos_verificacao
+         WHERE email = :email AND codigo = :codigo
+           AND expira_em > now()
+           AND usado_em IS NULL
+         LIMIT 1'
+    );
+    $stmt->execute(['email' => $email, 'codigo' => $codigo]);
+    $cod = $stmt->fetch();
 
-if (!$cod) {
-    erro(401, 'Código inválido ou expirado.');
-}
+    if (!$cod) {
+        erro(401, 'Código inválido ou expirado.');
+    }
 
-// Incrementa tentativas
-$tentativas = (int)$cod['tentativas'] + 1;
-if ($tentativas >= 3) {
-    $pdo->prepare('UPDATE codigos_verificacao SET usado_em = now(), tentativas = :t WHERE id = :id')
+    // Incrementa tentativas
+    $tentativas = (int)$cod['tentativas'] + 1;
+    if ($tentativas >= 3) {
+        $pdo->prepare('UPDATE codigos_verificacao SET usado_em = now(), tentativas = :t WHERE id = :id')
+            ->execute(['t' => $tentativas, 'id' => $cod['id']]);
+        erro(401, 'Máximo de tentativas excedido. Solicite um novo código.');
+    }
+    $pdo->prepare('UPDATE codigos_verificacao SET tentativas = :t WHERE id = :id')
         ->execute(['t' => $tentativas, 'id' => $cod['id']]);
-    erro(401, 'Máximo de tentativas excedido. Solicite um novo código.');
-}
-$pdo->prepare('UPDATE codigos_verificacao SET tentativas = :t WHERE id = :id')
-    ->execute(['t' => $tentativas, 'id' => $cod['id']]);
 
-// Marca como usado
-$pdo->prepare('UPDATE codigos_verificacao SET usado_em = now() WHERE id = :id')
-    ->execute(['id' => $cod['id']]);
+    // Marca como usado
+    $pdo->prepare('UPDATE codigos_verificacao SET usado_em = now() WHERE id = :id')
+        ->execute(['id' => $cod['id']]);
+}
+
+error_log("[sorteio] Verificar-codigo: email={$email}, is_whitelist=" . (email_is_whitelist($email) ? 'sim' : 'nao'));
 
 // Busca ou cria participante
 $colunas = 'SELECT p.id, p.token, p.is_admin, p.celular, p.consentimento_em, p.nome_completo, p.cpf,

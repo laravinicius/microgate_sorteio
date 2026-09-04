@@ -232,3 +232,13 @@ function normalizar_cpf(string $cpf): string
 {
     return preg_replace('/\D/', '', $cpf) ?? '';
 }
+
+// Lista de e-mails que bypassam verificação por código (teste local).
+// TODO: remover quando não precisar mais.
+function email_is_whitelist(string $email): bool
+{
+    $lista = [
+        'ti@microgateinformatica.com.br',
+    ];
+    return in_array($email, $lista, true);
+}
