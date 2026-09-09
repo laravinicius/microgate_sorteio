@@ -24,6 +24,7 @@ desktop.ini
 *.swo
 *~
 docs
+config.txt
 
 # --- Logs / temporários ---
 *.log
