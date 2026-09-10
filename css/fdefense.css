@@ -14,8 +14,8 @@
 #integrity-wrap { flex-shrink: 0; padding: 8px 14px; }
 #integrity-label { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; }
 #integrity-bar { height: 8px; border-radius: 4px; background: #2a2a2a; border: 1px solid var(--line); overflow: hidden; }
-#integrity-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--led-green), #2fbf6f); transition: width .25s ease, background .25s ease; }
-#integrity-fill.warn { background: linear-gradient(90deg, var(--led-amber), #e0951a); }
+#integrity-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--led-green), #4d8fd6); transition: width .25s ease, background .25s ease; }
+#integrity-fill.warn { background: linear-gradient(90deg, var(--led-amber), #0d3d80); }
 #integrity-fill.crit { background: linear-gradient(90deg, var(--led-red), #c73f3f); }
 
 #board {
@@ -39,7 +39,7 @@
   display: flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer;
   transform: translate(-50%, -50%);
 }
-.packet.legit { background: rgba(61,220,132,.16); border: 1.5px solid var(--led-green); color: var(--led-green); }
+.packet.legit { background: rgba(0,74,173,.16); border: 1.5px solid var(--led-green); color: var(--led-green); }
 .packet.malicious { background: rgba(255,92,92,.16); border: 1.5px solid var(--led-red); color: var(--led-red); }
 .packet .p-icon { font-size: 13px; }
 .packet.popped { animation: pop .18s ease forwards; }

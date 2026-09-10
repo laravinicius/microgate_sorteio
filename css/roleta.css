@@ -1,0 +1,116 @@
+.roleta-card-container {
+    perspective: 800px;
+    width: 280px;
+    height: 180px;
+    margin: 0 auto;
+}
+
+.roleta-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+}
+
+.roleta-card.girando {
+    transition: none;
+}
+
+.roleta-card.parado {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.roleta-card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+}
+
+.roleta-card-face--frente {
+    transform: rotateY(0deg);
+}
+
+.roleta-card-face--verso {
+    transform: rotateY(180deg);
+}
+
+.roleta-numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #4d8fd6;
+    text-shadow: 0 0 20px rgba(0, 74, 173, 0.4);
+    letter-spacing: 0.15em;
+}
+
+.roleta-card-face--verso .roleta-numero {
+    color: #1a5fc7;
+    text-shadow: 0 0 20px rgba(26, 95, 199, 0.4);
+}
+
+.roleta-resultado {
+    background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    animation: roleta-fadein 0.5s ease-out;
+}
+
+@keyframes roleta-fadein {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.roleta-resultado-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #9ca3af;
+    margin-bottom: 0.25rem;
+}
+
+.roleta-resultado-valor {
+    font-size: 1rem;
+    color: #f5f5f7;
+    word-break: break-all;
+}
+
+.roleta-resultado-valor--numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #4d8fd6;
+    text-shadow: 0 0 16px rgba(0, 74, 173, 0.35);
+    letter-spacing: 0.12em;
+}
+
+.roleta-resultado-valor--nome {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.roleta-glow {
+    box-shadow:
+        0 0 30px rgba(0, 74, 173, 0.15),
+        0 0 60px rgba(0, 74, 173, 0.05);
+}
+
+.roleta-glow-vencedor {
+    box-shadow:
+        0 0 40px rgba(0, 74, 173, 0.2),
+        0 0 80px rgba(0, 74, 173, 0.08);
+}

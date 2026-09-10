@@ -32,3 +32,6 @@ config.txt
 
 # --- PHP ---
 *.cache
+
+# --- Dados de teste (NUNCA rodar em producao) ---
+backend/sql/seed_*.sql

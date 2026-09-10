@@ -70,14 +70,14 @@
                         </div>
 
                         <div class="bg-brand-dark border border-white/10 rounded-2xl p-6 sm:p-8 text-center">
-                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#3ddc84] font-semibold mb-3">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#3ddc84]"></span>
+                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#4d8fd6">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#004AAD]"></span>
                                 Sorteio
                             </div>
                             <h2 class="text-lg font-bold mb-2">Meu número da sorte</h2>
 
                             <div id="pf-tem" class="hidden">
-                                <div id="pf-numero" class="text-5xl font-bold tracking-widest text-emerald-400 mb-4 font-mono">----
+                                <div id="pf-numero" class="text-5xl font-bold tracking-widest mb-4 font-mono" style="color:#4d8fd6">----
                                 </div>
                                 <div id="pf-detalhes" class="text-sm text-gray-400 whitespace-pre-line mb-6"></div>
                                 <a href="./jogos.html"
@@ -129,8 +129,13 @@
 
             function mostrarMensagem(texto, tipo) {
                 msg.textContent = texto;
-                msg.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
-                msg.classList.add(tipo === 'erro' ? 'text-red-400' : 'text-emerald-400');
+                msg.classList.remove('hidden', 'text-red-400');
+                msg.style.color = '';
+                if (tipo === 'erro') {
+                    msg.classList.add('text-red-400');
+                } else {
+                    msg.style.color = '#4d8fd6';
+                }
             }
 
             btnSair.addEventListener('click', () => {

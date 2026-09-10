@@ -60,6 +60,9 @@ const SorteioAPI = (() => {
         excluirConta(token) {
             return post('excluir-conta.php', { participante_token: token });
         },
+        listarNumerosSorte(token) {
+            return post('numeros-sorte.php', { participante_token: token });
+        },
 
         salvarParticipante(token) {
             sessionStorage.setItem('participante_token', token);

@@ -28,10 +28,6 @@
                 <div class="max-w-7xl mx-auto">
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                         <div>
-                            <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#ffb020] font-semibold mb-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#ffb020]"></span>
-                                Painel de Controle
-                            </div>
                             <h1 class="text-2xl font-bold mb-1">Administração</h1>
                             <p id="admin-sub" class="text-sm text-gray-400">Carregando usuários...</p>
                         </div>
@@ -146,7 +142,7 @@
                     tr.className = 'border-b border-white/5 hover:bg-white/5 transition';
 
                     const adminBadge = u.is_admin
-                        ? '<span class="text-xs text-amber-400 border border-amber-400/40 rounded px-1.5 py-0.5 ml-2">Admin</span>'
+                        ? '<span class="text-xs border border-amber-400/40 rounded px-1.5 py-0.5 ml-2" style="color:#4d8fd6">Admin</span>'
                         : '';
 
                     tr.innerHTML = `
@@ -154,7 +150,7 @@
                         <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(u.email)}</td>
                         <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(formatarCelular(u.celular))}</td>
                         <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(u.empresa || '—')}</td>
-                        <td class="py-3 pr-4 whitespace-nowrap ${u.numero_sorte ? 'text-emerald-400 font-semibold' : 'text-gray-500'}">${u.numero_sorte || '—'}</td>
+                        <td class="py-3 pr-4 whitespace-nowrap ${u.numero_sorte ? 'font-semibold' : 'text-gray-500'}" ${u.numero_sorte ? 'style="color:#4d8fd6"' : ''}>${u.numero_sorte || '—'}</td>
                         <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(nomeJogo(u.jogo))}</td>
                         <td class="py-3 pr-4 whitespace-nowrap">${u.pontuacao ?? '—'}</td>
                         <td class="py-3 pr-4 whitespace-nowrap">${escapeHtml(formatarData(u.criado_em))}</td>
