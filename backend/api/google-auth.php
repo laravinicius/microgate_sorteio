@@ -58,7 +58,7 @@ if ($emailVerificado !== true && $emailVerificado !== 'true') {
 
 $googleSub = trim((string)($payload['sub'] ?? ''));
 $email     = mb_strtolower(trim((string)($payload['email'] ?? '')));
-$nome      = trim((string)($payload['name'] ?? ''));
+$nome      = mb_substr(trim((string)($payload['name'] ?? '')), 0, 150);
 if ($googleSub === '' || $email === '' || !validar_email($email)) {
     erro(401, 'Dados insuficientes retornados pelo Google.');
 }
@@ -118,7 +118,7 @@ try {
         'nome'  => $nome,
         'email' => $email,
         'sub'   => $googleSub,
-        'ip'    => $_SERVER['REMOTE_ADDR'] ?? null,
+        'ip'    => get_client_ip(),
         'ua'    => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
     ]);
     $participante = $stmt->fetch();

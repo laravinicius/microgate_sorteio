@@ -19,6 +19,8 @@ if ($participanteToken === '') {
     erro(422, 'Cadastro não encontrado. Refaça o cadastro.');
 }
 
+verificar_rate_limit('excluir-conta', 5, 60);
+
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare('SELECT id FROM participantes WHERE token = :token LIMIT 1');

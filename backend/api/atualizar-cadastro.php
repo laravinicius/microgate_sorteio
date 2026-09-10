@@ -19,6 +19,8 @@ if ($participanteToken === '') {
     erro(422, 'Cadastro não encontrado. Refaça o cadastro.');
 }
 
+verificar_rate_limit('atualizar-cadastro', 10, 60);
+
 $nome         = trim((string)($dados['nome'] ?? ''));
 $cpfRaw       = trim((string)($dados['cpf'] ?? ''));
 $celularRaw   = trim((string)($dados['celular'] ?? ''));
@@ -27,6 +29,12 @@ $consentimento = ($dados['consentimento'] ?? false) === true;
 
 if ($nome !== '' && mb_strlen($nome) < 3) {
     erro(422, 'Informe o nome completo.');
+}
+if (mb_strlen($nome) > 150) {
+    erro(422, 'O nome deve ter no máximo 150 caracteres.');
+}
+if (mb_strlen($empresa) > 150) {
+    erro(422, 'A empresa deve ter no máximo 150 caracteres.');
 }
 
 // CPF: se informado, validar formato e dígitos

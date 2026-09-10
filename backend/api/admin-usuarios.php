@@ -27,6 +27,8 @@ if (!$participante['is_admin']) {
     erro(403, 'Acesso restrito ao administrador.');
 }
 
+verificar_rate_limit('admin-usuarios', 10, 60);
+
 $stmt = $pdo->query(
     'SELECT p.id, p.token, p.nome_completo, p.email, p.celular, p.cpf, p.empresa,
             p.ip_origem, p.user_agent, p.is_admin, p.criado_em,

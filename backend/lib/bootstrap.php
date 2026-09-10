@@ -6,6 +6,10 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
+// Headers de segurança básicos para todas as respostas da API.
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: no-referrer');
 
 // Ajuste aqui se o front-end um dia rodar em outro domínio/porta.
 // Como front-end e API estão no mesmo servidor/domínio, CORS normalmente
@@ -141,21 +145,77 @@ function get_email_config(): array
     return $cfg;
 }
 
-// Obtém o IP do cliente (respeita X-Forwarded-For se behind proxy confiável).
-function get_client_ip(): string
+// Retorna true se $ip pertence ao IP/CIDR $cidr (ex.: "10.0.0.0/8" ou "127.0.0.1").
+function ip_no_cidr(string $ip, string $cidr): bool
 {
-    $headers = [
-        'HTTP_X_FORWARDED_FOR',
-        'HTTP_X_REAL_IP',
-        'HTTP_CLIENT_IP',
-    ];
-    foreach ($headers as $header) {
-        if (!empty($_SERVER[$header])) {
-            $ips = explode(',', $_SERVER[$header]);
-            return trim($ips[0]);
+    $pos = strpos($cidr, '/');
+    if ($pos === false) {
+        return $ip === $cidr;
+    }
+    $rede     = substr($cidr, 0, $pos);
+    $prefixo  = (int)substr($cidr, $pos + 1);
+    $ipBin    = @inet_pton($ip);
+    $redeBin  = @inet_pton($rede);
+    if ($ipBin === false || $redeBin === false || strlen($ipBin) !== strlen($redeBin)) {
+        return false;
+    }
+    $bytesCompletos = intdiv($prefixo, 8);
+    $bitsRestantes  = $prefixo % 8;
+    for ($i = 0; $i < $bytesCompletos; $i++) {
+        if ($ipBin[$i] !== $redeBin[$i]) {
+            return false;
         }
     }
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    if ($bitsRestantes > 0) {
+        $mascara = (0xFF << (8 - $bitsRestantes)) & 0xFF;
+        if ((ord($ipBin[$bytesCompletos]) & $mascara) !== (ord($redeBin[$bytesCompletos]) & $mascara)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Retorna true se o peer direto (REMOTE_ADDR) é um proxy reverso confiável.
+function eh_proxy_confiavel(string $ip): bool
+{
+    static $cfg = null;
+    static $carregado = false;
+    if (!$carregado) {
+        try {
+            $cfg = require __DIR__ . '/../config/security.php';
+        } catch (Throwable $e) {
+            $cfg = [];
+        }
+        $carregado = true;
+    }
+    foreach (($cfg['proxies_confiaveis'] ?? []) as $cidr) {
+        if (ip_no_cidr($ip, trim((string)$cidr))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Obtém o IP do cliente. Só confia em X-Forwarded-For/X-Real-IP/HTTP_CLIENT_IP
+// quando o peer direto está na lista de proxies confiáveis (backend/config/security.php).
+// Caso contrário retorna REMOTE_ADDR (fail-closed, sem confiar em headers).
+function get_client_ip(): string
+{
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    if (eh_proxy_confiavel($remote)) {
+        $headers = [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CLIENT_IP',
+        ];
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ips = explode(',', $_SERVER[$header]);
+                return trim($ips[0]);
+            }
+        }
+    }
+    return $remote;
 }
 
 // Rate limiting por IP + endpoint (janela fixa com reset automático).
@@ -240,11 +300,17 @@ function is_dev_mode(): bool
 }
 
 // Lista de e-mails que bypassam verificação por código (teste local).
+// Só tem efeito em DEV_MODE: em produção o bypass é desativado para não
+// permitir login sem código (inclusive na conta de administrador).
 // TODO: remover quando não precisar mais.
 function email_is_whitelist(string $email): bool
 {
+    if (!is_dev_mode()) {
+        return false;
+    }
     $lista = [
         'ti@microgateinformatica.com.br',
+        'usuario@microgateinformatica.com.br',
     ];
     return in_array($email, $lista, true);
 }

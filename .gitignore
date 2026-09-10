@@ -8,6 +8,9 @@ backend/config/google.*.php
 backend/config/email.php
 backend/config/email.*.php
 !backend/config/email.example.php
+backend/config/security.php
+backend/config/security.*.php
+!backend/config/security.example.php
 .env
 .env.*
 !.env.example

@@ -481,6 +481,84 @@ body {
     .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* --- Tooltip de Validação --- */
+.campo-tooltip {
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    transform: translateY(100%);
+    background: var(--panel-2);
+    border: 1px solid rgba(255, 92, 92, 0.5);
+    border-radius: var(--radius-sm);
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    color: var(--led-red);
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    animation: tooltipIn 0.15s ease;
+}
+
+.campo-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 16px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 6px solid rgba(255, 92, 92, 0.5);
+}
+
+.campo-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 17px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid var(--panel-2);
+}
+
+@keyframes tooltipIn {
+    from { opacity: 0; transform: translateY(100%) translateY(-4px); }
+    to { opacity: 1; transform: translateY(100%); }
+}
+
+/* Mensagem de topo no formulário */
+.msg-topo {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    color: var(--led-blue);
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.5rem;
+    --neon-r: 92;
+    --neon-g: 192;
+    --neon-b: 255;
+    text-shadow:
+        0 0 4px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.6),
+        0 0 11px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4),
+        0 0 19px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.2);
+    animation: pulse-neon 2s ease-in-out infinite;
+}
+
+@keyframes pulse-neon {
+    0%, 100% {
+        text-shadow:
+            0 0 4px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.6),
+            0 0 11px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4),
+            0 0 19px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.2);
+    }
+    50% {
+        text-shadow:
+            0 0 2px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.3),
+            0 0 5px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.2),
+            0 0 8px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.1);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;

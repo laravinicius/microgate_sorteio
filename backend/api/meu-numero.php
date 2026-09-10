@@ -17,6 +17,8 @@ if ($participanteToken === '') {
     erro(422, 'Cadastro não encontrado. Refaça o cadastro.');
 }
 
+verificar_rate_limit('meu-numero', 30, 60);
+
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare(

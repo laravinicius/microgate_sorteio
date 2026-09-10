@@ -13,6 +13,8 @@ require __DIR__ . '/../lib/bootstrap.php';
 exigir_post();
 exigir_admin();
 
+verificar_rate_limit('numeros-sorte', 10, 60);
+
 $pdo = get_pdo();
 
 $stmt = $pdo->query(

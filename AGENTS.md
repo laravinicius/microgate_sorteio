@@ -39,7 +39,8 @@ Não há npm, composer, CI, testes, linter ou build. Nada de `npm install`/`yarn
 
 - `backend/config/database.php` **não é versionado** (gitignored) e é o único arquivo de conexão; `bootstrap.php` faz `require` dele. Se faltar, toda a API retorna 503.
 - `backend/config/google.php` também **não é versionado** (gitignored); contém o Client ID do OAuth do Google usado por `get_google_client_id()` em `bootstrap.php`. Se faltar, `google-auth.php` retorna 500.
-- Para criar local: `cp backend/config/database.example.php backend/config/database.php` (e `google.example.php` → `google.php`) e preencher. Banco é PostgreSQL externo (`pdo_pgsql`).
+- `backend/config/security.php` também **não é versionado** (gitignored); contém `proxies_confiaveis` (IPs/CIDRs de proxies reversos) usado por `get_client_ip()` em `bootstrap.php`. Se faltar ou estiver vazio, a API não confia em `X-Forwarded-For`/`X-Real-IP` (fail-closed → usa `REMOTE_ADDR`). Sem ele, o rate limit por IP pode ser burlado com headers forjados.
+- Para criar local: `cp backend/config/database.example.php backend/config/database.php` (e `google.example.php` → `google.php`, `security.example.php` → `security.php`) e preencher. Banco é PostgreSQL externo (`pdo_pgsql`).
 - Ao mexer no schema: altere `backend/sql/schema.sql` (fonte da verdade) **e** adicione/atualize migração em `backend/sql/` (ex: `migracao_admin.sql`, `migracao_google_lgpd.sql`). Aplicar com `psql "host=... port=5432 dbname=sorteio_microgate user=..." -f backend/sql/schema.sql`.
 
 ## CSS/Tailwind (gotcha)

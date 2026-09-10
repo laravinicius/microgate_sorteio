@@ -107,7 +107,7 @@ try {
         'celular'      => null,
         'empresa'      => null,
         'consentimento' => null,
-        'ip'           => $_SERVER['REMOTE_ADDR'] ?? null,
+        'ip'           => get_client_ip(),
         'ua'           => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
     ]);
     $participante = $stmt->fetch();
