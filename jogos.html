@@ -77,6 +77,10 @@
             // Aviso informativo: quem já tem número pode jogar de novo, mas sem gerar novo número
             SorteioAPI.consultarNumero(participanteToken)
                 .then((dados) => {
+                    if (!dados.cadastro_completo) {
+                        window.location.href = './completar.html?msg=' + encodeURIComponent('Complete seu cadastro para jogar.');
+                        return;
+                    }
                     if (dados.tem_numero) {
                         mensagemBloqueio.textContent =
                             `Você já tem o número ${dados.numero_sorte}. Pode jogar novamente, mas nenhum novo número será gerado.`;

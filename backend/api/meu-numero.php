@@ -20,7 +20,7 @@ if ($participanteToken === '') {
 $pdo = get_pdo();
 
 $stmt = $pdo->prepare(
-    'SELECT p.nome_completo, p.email, p.celular, p.cpf, p.empresa, p.is_admin,
+    'SELECT p.nome_completo, p.email, p.celular, p.cpf, p.empresa, p.is_admin, p.consentimento_em,
             ns.numero AS numero_sorte, ns.jogo, ns.pontuacao, ns.gerado_em
      FROM participantes p
      LEFT JOIN numeros_sorte ns ON ns.participante_id = p.id
@@ -35,15 +35,16 @@ if (!$participante) {
 }
 
 sucesso([
-    'nome'         => $participante['nome_completo'],
-    'email'        => $participante['email'],
-    'celular'      => $participante['celular'],
-    'cpf'          => $participante['cpf'],
-    'empresa'      => $participante['empresa'],
-    'is_admin'     => (bool)$participante['is_admin'],
-    'tem_numero'   => $participante['numero_sorte'] !== null,
-    'numero_sorte' => $participante['numero_sorte'],
-    'jogo'         => $participante['jogo'],
-    'pontuacao'    => $participante['pontuacao'],
-    'gerado_em'    => $participante['gerado_em'],
+    'nome'              => $participante['nome_completo'],
+    'email'             => $participante['email'],
+    'celular'           => $participante['celular'],
+    'cpf'               => $participante['cpf'],
+    'empresa'           => $participante['empresa'],
+    'is_admin'          => (bool)$participante['is_admin'],
+    'cadastro_completo' => $participante['celular'] !== null && $participante['consentimento_em'] !== null,
+    'tem_numero'        => $participante['numero_sorte'] !== null,
+    'numero_sorte'      => $participante['numero_sorte'],
+    'jogo'              => $participante['jogo'],
+    'pontuacao'         => $participante['pontuacao'],
+    'gerado_em'         => $participante['gerado_em'],
 ]);

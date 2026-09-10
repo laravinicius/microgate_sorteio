@@ -86,6 +86,15 @@
                 return;
             }
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const msgParam = urlParams.get('msg');
+            if (msgParam) {
+                const formMsg = document.getElementById('form-mensagem');
+                formMsg.textContent = msgParam;
+                formMsg.classList.remove('hidden', 'text-red-400');
+                formMsg.classList.add('text-yellow-400');
+            }
+
             const form = document.getElementById('form-completar');
             const msg = document.getElementById('form-mensagem');
             const btn = document.getElementById('btn-completar');
