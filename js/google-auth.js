@@ -17,8 +17,6 @@ async function processarCredencialGoogle(resposta) {
 
         if (resultado.precisa_completar) {
             window.location.href = './completar.html';
-        } else if (resultado.tem_numero) {
-            window.location.href = './perfil.html';
         } else {
             window.location.href = './jogos.html';
         }
