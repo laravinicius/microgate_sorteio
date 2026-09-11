@@ -138,6 +138,16 @@
                 }
             }
 
+            function formatarCelular(digits) {
+                if (digits.length <= 2) return '(' + digits;
+                if (digits.length <= 7) return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
+            }
+            document.getElementById('celular').addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                e.target.value = formatarCelular(val);
+            });
+
             btnSair.addEventListener('click', () => {
                 SorteioAPI.logout();
                 window.location.href = './index.html';
@@ -166,7 +176,10 @@
                     sub.classList.add('hidden');
                     document.getElementById('nome').value = dados.nome || '';
                     document.getElementById('email').value = dados.email || '';
-                    document.getElementById('celular').value = dados.celular || '';
+                    const celularDigits = (dados.celular || '').replace(/\D/g, '');
+                    document.getElementById('celular').value = celularDigits
+                        ? '(' + celularDigits.slice(0, 2) + ') ' + celularDigits.slice(2, 7) + (celularDigits.length > 7 ? '-' + celularDigits.slice(7) : celularDigits.slice(2))
+                        : '(';
                     document.getElementById('empresa').value = dados.empresa || '';
                     form.classList.remove('hidden');
 
