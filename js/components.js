@@ -74,10 +74,10 @@ async function loadComponents() {
         aplicarAdmin(false);
     }
 
-    // Logo: logado -> perfil; deslogado -> cadastro/login (index)
+    // Logo sempre leva para a tela de jogos.
     const logoLink = document.getElementById('logo-link');
     const logoLinkMobile = document.getElementById('logo-link-mobile');
-    const logoDestino = logado ? './perfil.html' : './index.html';
+    const logoDestino = './jogos.html';
     if (logoLink) logoLink.href = logoDestino;
     if (logoLinkMobile) logoLinkMobile.href = logoDestino;
 
